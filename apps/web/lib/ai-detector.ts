@@ -13,9 +13,11 @@ export interface AIDetectionResult {
 
 export class AIPIIDetector {
   private mistral: Mistral;
+  private model: string;
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string, model: string = "mistral-large-latest") {
     this.mistral = new Mistral({ apiKey });
+    this.model = model;
   }
 
   async detect(text: string): Promise<DetectedEntity[]> {
@@ -45,7 +47,7 @@ Return ONLY valid JSON in this format:
 
     try {
       const response = await this.mistral.chat.complete({
-        model: "mistral-large-latest",
+        model: this.model,
         messages: [{ role: "user", content: prompt }],
         responseFormat: { type: "json_object" },
         temperature: 0.1, // Lower temperature for more consistent detection

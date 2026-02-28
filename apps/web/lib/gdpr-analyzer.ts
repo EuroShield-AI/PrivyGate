@@ -25,7 +25,8 @@ export interface GDPRReport {
 export async function analyzeWebsite(
   url: string,
   mistralApiKey?: string,
-  onStatusUpdate?: (status: string) => void
+  onStatusUpdate?: (status: string) => void,
+  model: string = "mistral-large-latest"
 ): Promise<GDPRReport> {
   try {
     onStatusUpdate?.("Loading website (waiting for SPA content to load)...");
@@ -412,7 +413,7 @@ Return JSON with:
 }`;
 
         const piiResponse = await mistral.chat.complete({
-          model: "mistral-large-latest",
+          model: model,
           messages: [{ role: "user", content: piiDetectionPrompt }],
           responseFormat: { type: "json_object" },
           temperature: 0.2,
@@ -518,7 +519,7 @@ Format as JSON:
 }`;
 
         const complianceResponse = await mistral.chat.complete({
-          model: "mistral-large-latest",
+          model: model,
           messages: [{ role: "user", content: compliancePrompt }],
           responseFormat: { type: "json_object" },
           temperature: 0.2,

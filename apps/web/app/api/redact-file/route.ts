@@ -6,7 +6,7 @@ import { AIPIIDetector } from "@/lib/ai-detector";
 import { encrypt } from "@/lib/encryption";
 import { AuditLogger } from "@/lib/audit";
 import { requireAuth } from "@/lib/auth";
-import { getMistralApiKey } from "@/lib/mistral-config";
+import { getMistralApiKey, getSelectedModel } from "@/lib/mistral-config";
 import { eq } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 
@@ -59,15 +59,16 @@ export async function POST(request: NextRequest) {
           userId: auth.user.id,
         });
 
-    // Get user's Mistral API key for AI detection
-    const mistralApiKey = await getMistralApiKey(auth.user.id);
-    
-    // Detect PII using AI if API key is available, otherwise fallback to regex
-    let entities;
-    if (mistralApiKey) {
-      try {
-        const aiDetector = new AIPIIDetector(mistralApiKey);
-        entities = await aiDetector.detect(file.extractedText);
+        // Get user's Mistral API key and selected model for AI detection
+        const mistralApiKey = await getMistralApiKey(auth.user.id);
+        const selectedModel = await getSelectedModel(auth.user.id);
+        
+        // Detect PII using AI if API key is available, otherwise fallback to regex
+        let entities;
+        if (mistralApiKey) {
+          try {
+            const aiDetector = new AIPIIDetector(mistralApiKey, selectedModel);
+            entities = await aiDetector.detect(file.extractedText);
         
         // If AI detection finds nothing or fails, fallback to regex
         if (entities.length === 0) {

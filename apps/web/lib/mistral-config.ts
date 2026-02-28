@@ -49,3 +49,34 @@ export async function saveMistralApiKey(userId: string, apiKey: string): Promise
     throw error;
   }
 }
+
+export async function getSelectedModel(userId: string): Promise<string> {
+  try {
+    const userResults = await db.select({
+      selectedModel: users.selectedModel,
+    })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    const user = userResults[0];
+    return user?.selectedModel || "mistral-large-latest";
+  } catch (error) {
+    console.error("Error retrieving selected model:", error);
+    return "mistral-large-latest";
+  }
+}
+
+export async function saveSelectedModel(userId: string, model: string): Promise<void> {
+  try {
+    await db.update(users)
+      .set({
+        selectedModel: model,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
+  } catch (error) {
+    console.error("Error saving selected model:", error);
+    throw error;
+  }
+}

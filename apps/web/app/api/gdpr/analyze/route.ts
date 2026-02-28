@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { analyzeWebsite } from "@/lib/gdpr-analyzer";
 import { requireAuth } from "@/lib/auth";
-import { getMistralApiKey } from "@/lib/mistral-config";
+import { getMistralApiKey, getSelectedModel } from "@/lib/mistral-config";
 
 const analyzeSchema = z.object({
   url: z.string().url(),
@@ -48,8 +48,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { url } = analyzeSchema.parse(body);
 
-    // Get user's Mistral API key for AI analysis (optional but recommended)
+    // Get user's Mistral API key and selected model for AI analysis (optional but recommended)
     const mistralApiKey = await getMistralApiKey(auth.user.id);
+    const selectedModel = await getSelectedModel(auth.user.id);
 
     // Create a status update callback for real-time updates
     const statusUpdates: string[] = [];
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
       statusUpdates.push(status);
     };
 
-    const report = await analyzeWebsite(url, mistralApiKey || undefined, onStatusUpdate);
+    const report = await analyzeWebsite(url, mistralApiKey || undefined, onStatusUpdate, selectedModel);
 
     return NextResponse.json({
       ...report,

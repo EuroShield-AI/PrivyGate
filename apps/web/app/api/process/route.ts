@@ -3,7 +3,7 @@ import { z } from "zod";
 import { db, jobs } from "@/lib/db";
 import { AuditLogger } from "@/lib/audit";
 import { requireAuth } from "@/lib/auth";
-import { getMistralApiKey } from "@/lib/mistral-config";
+import { getMistralApiKey, getSelectedModel } from "@/lib/mistral-config";
 import { Mistral } from "@mistralai/mistralai";
 import { eq } from "drizzle-orm";
 
@@ -52,9 +52,11 @@ export async function POST(request: NextRequest) {
     const auditLogger = new AuditLogger();
     await auditLogger.log(jobId, "PROCESSING_STARTED", { taskType });
 
+    // Get user's selected model
+    const modelUsed = await getSelectedModel(auth.user.id);
+    
     // Process based on task type
     let result: unknown;
-    let modelUsed = "mistral-large-latest";
     const redactedText = job.redactedText;
 
     let totalTokens = 0;
