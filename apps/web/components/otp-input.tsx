@@ -16,20 +16,23 @@ export function OTPInput({ length = 6, value, onChange, disabled }: OTPInputProp
 
   const handleChange = (index: number, newValue: string) => {
     if (newValue.length > 1) {
-      // Handle paste
-      const pastedValues = newValue.slice(0, length).split("");
-      const newOtp = [...otp];
-      pastedValues.forEach((val, i) => {
-        if (index + i < length && /^\d$/.test(val)) {
-          newOtp[index + i] = val;
+      // Handle paste - extract only digits
+      const digits = newValue.replace(/\D/g, "").slice(0, length);
+      const newOtp = Array(length).fill("");
+      
+      // Fill all fields with pasted digits
+      digits.split("").forEach((digit, i) => {
+        if (i < length) {
+          newOtp[i] = digit;
         }
       });
+      
       setOtp(newOtp);
       onChange(newOtp.join(""));
       
-      // Focus the next empty input or the last one
-      const nextIndex = Math.min(index + pastedValues.length, length - 1);
-      inputRefs.current[nextIndex]?.focus();
+      // Focus the last filled input or the last input
+      const focusIndex = Math.min(digits.length - 1, length - 1);
+      inputRefs.current[focusIndex]?.focus();
       return;
     }
 
@@ -43,6 +46,29 @@ export function OTPInput({ length = 6, value, onChange, disabled }: OTPInputProp
     if (newValue && index < length - 1) {
       inputRefs.current[index + 1]?.focus();
     }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text");
+    const digits = pastedData.replace(/\D/g, "").slice(0, length);
+    const newOtp = Array(length).fill("");
+    
+    // Fill all fields with pasted digits
+    digits.split("").forEach((digit, i) => {
+      if (i < length) {
+        newOtp[i] = digit;
+      }
+    });
+    
+    setOtp(newOtp);
+    onChange(newOtp.join(""));
+    
+    // Focus the last filled input or the last input
+    const focusIndex = Math.min(digits.length - 1, length - 1);
+    setTimeout(() => {
+      inputRefs.current[focusIndex]?.focus();
+    }, 0);
   };
 
   const handleKeyDown = (index: number, e: KeyboardEvent<HTMLInputElement>) => {
@@ -62,6 +88,7 @@ export function OTPInput({ length = 6, value, onChange, disabled }: OTPInputProp
           maxLength={1}
           value={otp[index] || ""}
           onChange={(e) => handleChange(index, e.target.value)}
+          onPaste={handlePaste}
           onKeyDown={(e) => handleKeyDown(index, e)}
           disabled={disabled}
           className="w-12 h-12 text-center text-lg font-semibold"
