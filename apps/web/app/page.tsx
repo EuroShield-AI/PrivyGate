@@ -7,17 +7,30 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 interface RedactionResult {
   jobId: string;
   redactedText: string;
   entities: Array<{ type: string; token: string; confidence: number }>;
+  fileInfo?: {
+    filename: string;
+    wordCount: number;
+  };
 }
 
 interface ProcessResult {
   jobId: string;
   taskType: string;
   result: unknown;
+}
+
+interface FileUploadResult {
+  fileId: string;
+  filename: string;
+  extractedText: string;
+  wordCount: number;
+  pageCount?: number;
 }
 
 export default function Home() {
@@ -27,6 +40,9 @@ export default function Home() {
   const [processing, setProcessing] = useState(false);
   const [processResult, setProcessResult] = useState<ProcessResult | null>(null);
   const [taskType, setTaskType] = useState<"summarize" | "classify" | "extract-actions">("summarize");
+  const [uploadedFile, setUploadedFile] = useState<FileUploadResult | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [activeTab, setActiveTab] = useState<"text" | "file">("text");
 
   const handleRedact = async () => {
     if (!inputText.trim()) return;
@@ -82,6 +98,76 @@ export default function Home() {
     }
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = [
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+    if (!validTypes.includes(file.type)) {
+      alert("Please upload a PDF or DOCX file");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Upload failed");
+      }
+
+      const data = await response.json();
+      setUploadedFile(data);
+      setInputText(data.extractedText);
+      setRedactionResult(null);
+      setProcessResult(null);
+    } catch (error) {
+      console.error("Upload error:", error);
+      alert("Failed to upload file. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRedactFile = async () => {
+    if (!uploadedFile) return;
+
+    setProcessing(true);
+    try {
+      const response = await fetch("/api/redact-file", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileId: uploadedFile.fileId,
+          retentionMode,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Redaction failed");
+      }
+
+      const data = await response.json();
+      setRedactionResult(data);
+      setProcessResult(null);
+    } catch (error) {
+      console.error("File redaction error:", error);
+      alert("Failed to redact file. Please try again.");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   const handleExportRoPA = async () => {
     try {
       const response = await fetch("/api/export/ropa");
@@ -110,12 +196,69 @@ export default function Home() {
           <p className="text-slate-600">Privacy-by-Design AI Infrastructure for Europe</p>
         </div>
 
+        <Card>
+          <CardHeader>
+            <CardTitle>Input Method</CardTitle>
+            <CardDescription>Choose how to provide content for processing</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-2 mb-4">
+              <Button
+                variant={activeTab === "text" ? "default" : "outline"}
+                onClick={() => setActiveTab("text")}
+              >
+                Text Input
+              </Button>
+              <Button
+                variant={activeTab === "file" ? "default" : "outline"}
+                onClick={() => setActiveTab("file")}
+              >
+                File Upload (PDF/DOCX)
+              </Button>
+            </div>
+
+            {activeTab === "file" && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="file">Upload Document</Label>
+                  <Input
+                    id="file"
+                    type="file"
+                    accept=".pdf,.docx"
+                    onChange={handleFileUpload}
+                    disabled={uploading}
+                  />
+                  <p className="text-xs text-slate-500">
+                    Supported formats: PDF, DOCX (Max 50MB)
+                  </p>
+                </div>
+                {uploadedFile && (
+                  <div className="p-3 bg-slate-50 rounded-md border">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">{uploadedFile.filename}</p>
+                        <p className="text-sm text-slate-500">
+                          {uploadedFile.wordCount} words
+                          {uploadedFile.pageCount && ` • ${uploadedFile.pageCount} pages`}
+                        </p>
+                      </div>
+                      <Badge variant="secondary">Extracted</Badge>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Input Text</CardTitle>
+              <CardTitle>{activeTab === "file" ? "File Content" : "Input Text"}</CardTitle>
               <CardDescription>
-                Enter text containing personal data to be redacted
+                {activeTab === "file"
+                  ? "Extracted text from uploaded file"
+                  : "Enter text containing personal data to be redacted"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -146,11 +289,15 @@ export default function Home() {
                 </Select>
               </div>
               <Button
-                onClick={handleRedact}
-                disabled={processing || !inputText.trim()}
+                onClick={activeTab === "file" ? handleRedactFile : handleRedact}
+                disabled={processing || uploading || (!inputText.trim() && !uploadedFile)}
                 className="w-full"
               >
-                {processing ? "Processing..." : "Detect & Redact PII"}
+                {processing
+                  ? "Processing..."
+                  : uploading
+                  ? "Uploading..."
+                  : "Detect & Redact PII"}
               </Button>
             </CardContent>
           </Card>
