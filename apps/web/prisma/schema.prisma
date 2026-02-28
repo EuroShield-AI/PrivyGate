@@ -38,12 +38,29 @@ model File {
   filePath    String
   extractedText String? @db.Text
   chunkCount  Int      @default(0)
+  useVectorDB Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   jobs        Job[]
+  chunks      VectorChunk[]
 
   @@index([createdAt])
   @@map("files")
+}
+
+model VectorChunk {
+  id          String   @id @default(uuid())
+  fileId      String
+  chunkIndex  Int
+  content     String   @db.Text
+  vectorId    String?  // ChromaDB document ID
+  metadata    String?  @db.Text
+  createdAt   DateTime @default(now())
+  file        File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@index([fileId])
+  @@index([vectorId])
+  @@map("vector_chunks")
 }
 
 model DetectedEntity {

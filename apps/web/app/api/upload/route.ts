@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { saveUploadedFile, getMimeType } from "@/lib/upload";
-import { extractTextFromFile } from "@/lib/file-extractor";
+import { extractTextFromFile, chunkText } from "@/lib/file-extractor";
 import { AuditLogger } from "@/lib/audit";
+import { storeDocumentChunks } from "@/lib/vector-db";
 
 export async function POST(request: NextRequest) {
   try {
@@ -45,6 +46,30 @@ export async function POST(request: NextRequest) {
     // Extract text
     const extracted = await extractTextFromFile(buffer, mimeType);
 
+    // Determine if we should use vector DB (for large files > 10k words)
+    const useVectorDB = extracted.wordCount > 10000;
+    let chunkCount = 0;
+    let vectorIds: string[] = [];
+
+    if (useVectorDB) {
+      try {
+        // Store chunks in vector database
+        vectorIds = await storeDocumentChunks(
+          "", // Will be updated after file creation
+          extracted.text,
+          {
+            filename: file.name,
+            wordCount: extracted.wordCount,
+            pageCount: extracted.pageCount,
+          }
+        );
+        chunkCount = vectorIds.length;
+      } catch (error) {
+        console.error("Vector DB storage error:", error);
+        // Continue without vector DB if it fails
+      }
+    }
+
     // Save file record to database
     const fileRecord = await prisma.file.create({
       data: {
@@ -53,9 +78,27 @@ export async function POST(request: NextRequest) {
         mimeType,
         size: file.size,
         filePath,
-        extractedText: extracted.text,
+        extractedText: useVectorDB ? null : extracted.text, // Don't store full text if using vector DB
+        chunkCount,
+        useVectorDB,
       },
     });
+
+    // Update vector chunks with file ID if vector DB was used
+    if (useVectorDB && vectorIds.length > 0) {
+      // Store chunk metadata in database
+      const chunks = chunkText(extracted.text, 2000, 200);
+      for (let i = 0; i < chunks.length; i++) {
+        await prisma.vectorChunk.create({
+          data: {
+            fileId: fileRecord.id,
+            chunkIndex: i,
+            content: chunks[i],
+            vectorId: vectorIds[i],
+          },
+        });
+      }
+    }
 
     // Create audit log
     const auditLogger = new AuditLogger();
