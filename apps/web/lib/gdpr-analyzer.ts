@@ -148,6 +148,7 @@ export async function analyzeWebsite(
     if (mistralApiKey && pageText) {
       try {
         onStatusUpdate?.("Analyzing with AI...");
+        const { Mistral } = await import("@mistralai/mistralai");
         const mistral = new Mistral({ apiKey: mistralApiKey });
         
         const prompt = `Analyze this website's GDPR compliance. Website URL: ${url}
