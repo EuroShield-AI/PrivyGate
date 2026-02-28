@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -16,6 +16,7 @@ interface APIExample {
 
 export function APIExamples({ examples }: { examples: APIExample[] }) {
   const [copied, setCopied] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const copyToClipboard = async (text: string, id: string) => {
     await navigator.clipboard.writeText(text);
@@ -26,10 +27,27 @@ export function APIExamples({ examples }: { examples: APIExample[] }) {
   return (
     <Card className="h-full border border-slate-200 flex flex-col">
       <CardHeader className="border-b border-slate-200 flex-shrink-0">
-        <CardTitle className="text-lg">API Usage</CardTitle>
-        <CardDescription className="text-xs">Example code and responses</CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-lg">API Usage</CardTitle>
+            <CardDescription className="text-xs">Example code and responses</CardDescription>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="h-8 w-8 p-0"
+          >
+            {isExpanded ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
       </CardHeader>
-      <CardContent className="p-4 flex-1 overflow-y-auto">
+      {isExpanded && (
+        <CardContent className="p-4 flex-1 overflow-y-auto">
         <Tabs defaultValue="0" className="w-full">
           <TabsList className="grid w-full grid-cols-1 gap-1 mb-4 bg-slate-100">
             {examples.map((example, idx) => (
@@ -83,7 +101,8 @@ export function APIExamples({ examples }: { examples: APIExample[] }) {
             </TabsContent>
           ))}
         </Tabs>
-      </CardContent>
+        </CardContent>
+      )}
     </Card>
   );
 }

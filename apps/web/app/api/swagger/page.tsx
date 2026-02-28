@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import dynamic from "next/dynamic";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 const SwaggerUI = dynamic(() => import("swagger-ui-react"), { 
   ssr: false,
@@ -9,6 +13,7 @@ const SwaggerUI = dynamic(() => import("swagger-ui-react"), {
 });
 
 export default function SwaggerPage() {
+  const router = useRouter();
   const [spec, setSpec] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -81,6 +86,26 @@ export default function SwaggerPage() {
           display: none;
         }
       `}</style>
+      <div className="sticky top-0 z-50 bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-4 shadow-sm">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => router.back()}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Go Back
+        </Button>
+        <div className="flex-1">
+          <h1 className="text-lg font-semibold text-slate-900">API Documentation</h1>
+          <p className="text-xs text-slate-600">Interactive API reference with Swagger UI</p>
+        </div>
+        <Link href="/dashboard">
+          <Button variant="outline" size="sm">
+            Dashboard
+          </Button>
+        </Link>
+      </div>
       <SwaggerUI spec={spec} />
     </div>
   );
