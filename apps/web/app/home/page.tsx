@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,10 +11,22 @@ import { Shield, Lock, FileCheck, Zap, Globe, ArrowRight, CheckCircle2 } from "l
 import Link from "next/link";
 
 export default function HomePage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    // Check if user is already logged in
+    const token = localStorage.getItem("token");
+    if (token) {
+      setIsLoggedIn(true);
+      // Optionally redirect to dashboard
+      // router.push("/dashboard");
+    }
+  }, [router]);
 
   const handleSendOTP = async () => {
     if (!email) return;
@@ -46,7 +59,8 @@ export default function HomePage() {
       if (res.ok) {
         const data = await res.json();
         localStorage.setItem("token", data.token);
-        window.location.href = "/dashboard";
+        setIsLoggedIn(true);
+        router.push("/dashboard");
       }
     } catch (error) {
       console.error(error);
@@ -68,9 +82,11 @@ export default function HomePage() {
             <Link href="/api/swagger" className="text-sm text-slate-600 hover:text-slate-900">
               API Docs
             </Link>
-            <Link href="/dashboard" className="text-sm text-slate-600 hover:text-slate-900">
-              Dashboard
-            </Link>
+            {isLoggedIn && (
+              <Link href="/dashboard" className="text-sm text-slate-600 hover:text-slate-900">
+                Dashboard
+              </Link>
+            )}
           </nav>
         </div>
       </header>
@@ -245,11 +261,17 @@ export default function HomePage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Link href="/dashboard">
-              <Button size="lg" className="w-full bg-white text-blue-600 hover:bg-slate-100">
-                Go to Dashboard <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
+            {isLoggedIn ? (
+              <Link href="/dashboard">
+                <Button size="lg" className="w-full bg-white text-blue-600 hover:bg-slate-100">
+                  Go to Dashboard <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            ) : (
+              <p className="text-center text-slate-500">
+                Sign in to access the dashboard
+              </p>
+            )}
           </CardContent>
         </Card>
       </section>

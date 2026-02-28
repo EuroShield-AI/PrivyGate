@@ -14,6 +14,17 @@ export default function SwaggerPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Load Swagger UI CSS dynamically if not already loaded
+    const existingLink = document.querySelector('link[href*="swagger-ui"]');
+    if (!existingLink) {
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = "https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui.css";
+      document.head.appendChild(link);
+    }
+  }, []);
+
+  useEffect(() => {
     fetch("/api/docs")
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch API docs");
@@ -59,17 +70,6 @@ export default function SwaggerPage() {
       </div>
     );
   }
-
-  useEffect(() => {
-    // Load Swagger UI CSS dynamically if not already loaded
-    const existingLink = document.querySelector('link[href*="swagger-ui"]');
-    if (!existingLink) {
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href = "https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui.css";
-      document.head.appendChild(link);
-    }
-  }, []);
 
   return (
     <div className="min-h-screen bg-white">
