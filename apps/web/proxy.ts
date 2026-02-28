@@ -21,7 +21,7 @@ async function logWarning(message: string, metadata?: Record<string, unknown>) {
   }
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // Skip rate limiting for static files and API health checks
   if (
     request.nextUrl.pathname.startsWith("/_next") ||

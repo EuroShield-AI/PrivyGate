@@ -85,7 +85,7 @@ export const detectedEntities = mysqlTable('detected_entities', {
 // AuditLog table
 export const auditLogs = mysqlTable('audit_logs', {
   id: varchar('id', { length: 36 }).primaryKey().default('uuid()'),
-  jobId: varchar('jobId', { length: 36 }),
+  jobId: varchar('jobId', { length: 36 }), // Nullable - file uploads don't have a job yet
   eventType: varchar('eventType', { length: 100 }).notNull(),
   metadata: text('metadata').notNull(),
   timestamp: datetime('timestamp').default('CURRENT_TIMESTAMP'),
@@ -106,6 +106,7 @@ export const files = mysqlTable('files', {
   chunkCount: int('chunkCount').default(0),
   useVectorDB: int('useVectorDB').default(0),
   createdAt: datetime('createdAt').default('CURRENT_TIMESTAMP'),
+  updatedAt: datetime('updatedAt').default('CURRENT_TIMESTAMP'),
 }, (table) => ({
   createdAtIdx: index('createdAt_idx').on(table.createdAt),
 }));

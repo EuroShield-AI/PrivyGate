@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
 
     // Save file record to database
     const fileId = uuidv4();
+    const now = new Date();
     await db.insert(files).values({
       id: fileId,
       filename,
@@ -83,6 +84,7 @@ export async function POST(request: NextRequest) {
       extractedText: useVectorDB ? null : extracted.text, // Don't store full text if using vector DB
       chunkCount,
       useVectorDB: useVectorDB ? 1 : 0,
+      updatedAt: now,
     });
 
     // Update vector chunks with file ID if vector DB was used
@@ -102,9 +104,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create audit log
+    // Create audit log (no jobId for file uploads - job is created during redaction)
     const auditLogger = new AuditLogger();
-    await auditLogger.log(fileId, "FILE_UPLOADED", {
+    await auditLogger.log(null, "FILE_UPLOADED", {
+      fileId,
       filename: file.name,
       size: file.size,
       mimeType,

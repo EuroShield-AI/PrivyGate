@@ -1,5 +1,5 @@
-import pdfParse from "pdf-parse";
-import mammoth from "mammoth";
+import * as mammoth from "mammoth";
+import PDFParser from "pdf2json";
 
 export interface ExtractedText {
   text: string;
@@ -8,16 +8,58 @@ export interface ExtractedText {
 }
 
 export async function extractTextFromPDF(buffer: Buffer): Promise<ExtractedText> {
-  try {
-    const data = await pdfParse(buffer);
-    return {
-      text: data.text,
-      pageCount: data.numpages,
-      wordCount: data.text.split(/\s+/).length,
-    };
-  } catch (error) {
-    throw new Error(`Failed to extract text from PDF: ${error}`);
-  }
+  return new Promise((resolve, reject) => {
+    try {
+      const pdfParser = new PDFParser(null, 1);
+      let fullText = "";
+      let pageCount = 0;
+
+      pdfParser.on("pdfParser_dataError", (errData: any) => {
+        reject(new Error(`PDF parsing error: ${errData.parserError}`));
+      });
+
+      pdfParser.on("pdfParser_dataReady", (pdfData: any) => {
+        try {
+          pageCount = pdfData.Pages?.length || 0;
+          
+          // Extract text from all pages
+          if (pdfData.Pages) {
+            pdfData.Pages.forEach((page: any) => {
+              if (page.Texts) {
+                page.Texts.forEach((textItem: any) => {
+                  if (textItem.R) {
+                    textItem.R.forEach((run: any) => {
+                      if (run.T) {
+                        // Decode URI-encoded text
+                        try {
+                          fullText += decodeURIComponent(run.T) + " ";
+                        } catch (e) {
+                          fullText += run.T + " ";
+                        }
+                      }
+                    });
+                  }
+                });
+              }
+            });
+          }
+
+          resolve({
+            text: fullText.trim(),
+            pageCount,
+            wordCount: fullText.split(/\s+/).length,
+          });
+        } catch (error) {
+          reject(new Error(`Failed to process PDF data: ${error}`));
+        }
+      });
+
+      // Parse the PDF buffer
+      pdfParser.parseBuffer(buffer);
+    } catch (error) {
+      reject(new Error(`Failed to extract text from PDF: ${error}`));
+    }
+  });
 }
 
 export async function extractTextFromDOCX(buffer: Buffer): Promise<ExtractedText> {

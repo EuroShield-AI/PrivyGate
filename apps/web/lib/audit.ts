@@ -3,7 +3,7 @@ import { db, auditLogs } from "@/lib/db";
 import { v4 as uuidv4 } from "uuid";
 
 export const AuditEventSchema = z.object({
-  jobId: z.string().uuid(),
+  jobId: z.string().uuid().nullable(),
   eventType: z.enum([
     "REDACTION_STARTED",
     "REDACTION_COMPLETED",
@@ -11,6 +11,7 @@ export const AuditEventSchema = z.object({
     "PROCESSING_COMPLETED",
     "REVEAL_REQUESTED",
     "EXPORT_GENERATED",
+    "FILE_UPLOADED",
   ]),
   metadata: z.record(z.unknown()).optional(),
 });
@@ -26,10 +27,10 @@ export interface AuditRecord {
 }
 
 export class AuditLogger {
-  async log(jobId: string, eventType: string, metadata?: Record<string, unknown>): Promise<void> {
+  async log(jobId: string | null, eventType: string, metadata?: Record<string, unknown>): Promise<void> {
     await db.insert(auditLogs).values({
       id: uuidv4(),
-      jobId,
+      jobId: jobId || null,
       eventType,
       metadata: JSON.stringify(metadata || {}),
       timestamp: new Date(),
