@@ -196,6 +196,17 @@ MISTRAL_API_KEY="your-mistral-api-key-here"
 # Encryption secret (must be 32+ characters)
 # Generate one with: openssl rand -base64 32
 ENCRYPTION_SECRET="IxcXnMi6+8n68fuz7YmwLwovYemBW0iThvOiJyUKVbg="
+
+# NextAuth configuration
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your-nextauth-secret-key-here"
+
+# Optional: Upstash Redis for rate limiting (production)
+UPSTASH_REDIS_REST_URL=""
+UPSTASH_REDIS_REST_TOKEN=""
+
+# Optional: ChromaDB URL (defaults to http://localhost:8000)
+CHROMA_URL="http://localhost:8000"
 ```
 
 **Important Notes:**
