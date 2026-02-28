@@ -326,11 +326,11 @@ export default function SettingsPage() {
 
         <div className="lg:col-span-1 h-full">
           <Card className="border border-slate-200 h-full flex flex-col">
-            <CardHeader>
+            <CardHeader className="flex-shrink-0">
               <CardTitle>OAuth Credentials</CardTitle>
               <CardDescription>API authentication credentials</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 flex-1 overflow-y-auto">
               <div>
                 <Label>Client ID</Label>
                 <div className="flex gap-2 mt-1">
