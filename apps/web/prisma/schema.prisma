@@ -19,11 +19,31 @@ model Job {
   status       String
   originalText String?  @db.Text
   redactedText String?  @db.Text
+  fileId       String?
+  file         File?    @relation(fields: [fileId], references: [id], onDelete: SetNull)
   detectedEntities DetectedEntity[]
   auditLogs    AuditLog[]
 
   @@index([id])
+  @@index([fileId])
   @@map("jobs")
+}
+
+model File {
+  id          String   @id @default(uuid())
+  filename    String
+  originalName String
+  mimeType    String
+  size        Int
+  filePath    String
+  extractedText String? @db.Text
+  chunkCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  jobs        Job[]
+
+  @@index([createdAt])
+  @@map("files")
 }
 
 model DetectedEntity {
