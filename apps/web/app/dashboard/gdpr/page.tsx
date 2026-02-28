@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, AlertCircle, X, Loader2, Globe } from "lucide-react";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { Notification } from "@/components/notification";
-import { APIExamples } from "@/components/api-examples";
+import { APIUsageModal } from "@/components/api-usage-modal";
+import { Code2 } from "lucide-react";
 
 interface GDPRAnalysis {
   url: string;
@@ -313,13 +314,15 @@ export default function GDPRAnalyzerPage() {
                 </div>
               )}
             </CardContent>
-          </Card>
-        </div>
+              </Card>
+            </div>
 
-        <div className="lg:col-span-1 h-full">
-          <APIExamples examples={apiExamples} />
-        </div>
-      </div>
-    </>
-  );
-}
+            <APIUsageModal
+              open={apiModalOpen}
+              onOpenChange={setApiModalOpen}
+              examples={apiExamples}
+            />
+          </div>
+        </>
+      );
+    }

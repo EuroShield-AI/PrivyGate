@@ -16,7 +16,7 @@ interface APIExample {
 
 export function APIExamples({ examples }: { examples: APIExample[] }) {
   const [copied, setCopied] = useState<string | null>(null);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true); // Expanded by default
 
   const copyToClipboard = async (text: string, id: string) => {
     await navigator.clipboard.writeText(text);
@@ -46,8 +46,7 @@ export function APIExamples({ examples }: { examples: APIExample[] }) {
           </Button>
         </div>
       </CardHeader>
-      {isExpanded && (
-        <CardContent className="p-4 flex-1 overflow-y-auto">
+      <CardContent className="p-4 flex-1 overflow-y-auto">
         <Tabs defaultValue="0" className="w-full">
           <TabsList className="grid w-full grid-cols-1 gap-1 mb-4 bg-slate-100">
             {examples.map((example, idx) => (
@@ -101,8 +100,7 @@ export function APIExamples({ examples }: { examples: APIExample[] }) {
             </TabsContent>
           ))}
         </Tabs>
-        </CardContent>
-      )}
+      </CardContent>
     </Card>
   );
 }

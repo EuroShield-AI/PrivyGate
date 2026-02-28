@@ -10,9 +10,10 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { Notification } from "@/components/notification";
-import { APIExamples } from "@/components/api-examples";
+import { APIUsageModal } from "@/components/api-usage-modal";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { Code2 } from "lucide-react";
 
 interface RedactionResult {
   jobId: string;
@@ -29,6 +30,7 @@ export default function DashboardPage() {
   const [taskType, setTaskType] = useState<"summarize" | "classify" | "extract-actions">("summarize");
   const [processResult, setProcessResult] = useState<any>(null);
   const [notification, setNotification] = useState<{ type: "success" | "error" | "info" | "warning"; message: string } | null>(null);
+  const [apiModalOpen, setApiModalOpen] = useState(false);
 
   useEffect(() => {
     // Check Mistral API key on mount
@@ -354,13 +356,15 @@ export default function DashboardPage() {
                 )}
               </CardContent>
             </Card>
-          )}
-        </div>
+              )}
+            </div>
 
-        <div className="lg:col-span-1 h-full">
-          <APIExamples examples={apiExamples} />
-        </div>
-      </div>
-    </>
-  );
-}
+            <APIUsageModal
+              open={apiModalOpen}
+              onOpenChange={setApiModalOpen}
+              examples={apiExamples}
+            />
+          </div>
+        </>
+      );
+    }

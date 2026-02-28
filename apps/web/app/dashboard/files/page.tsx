@@ -10,10 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Upload, FileText, X, Shield, Zap, Eye, EyeOff } from "lucide-react";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { Notification } from "@/components/notification";
-import { APIExamples } from "@/components/api-examples";
+import { APIUsageModal } from "@/components/api-usage-modal";
 import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { Code2 } from "lucide-react";
 
 interface FileUploadResult {
   fileId: string;
@@ -532,13 +533,15 @@ export default function FilesPage() {
                 </Card>
               )}
             </>
-          )}
-        </div>
+              )}
+            </div>
 
-        <div className="lg:col-span-1 h-full">
-          <APIExamples examples={apiExamples} />
-        </div>
-      </div>
-    </>
-  );
-}
+            <APIUsageModal
+              open={apiModalOpen}
+              onOpenChange={setApiModalOpen}
+              examples={apiExamples}
+            />
+          </div>
+        </>
+      );
+    }
