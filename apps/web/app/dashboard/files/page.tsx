@@ -112,7 +112,7 @@ export default function FilesPage() {
 
       const data = await response.json();
       setFileResult(data);
-      showNotification("success", `File uploaded successfully! Extracted ${data.wordCount} words from ${data.pageCount || 0} pages.`);
+      showNotification("success", `File processed successfully! Extracted ${data.wordCount} words from ${data.pageCount || 0} pages.`);
     } catch (error) {
       console.error("Upload error:", error);
       showNotification("error", error instanceof Error ? error.message : "Failed to upload file");
@@ -250,7 +250,7 @@ export default function FilesPage() {
 
   return (
     <>
-      <Breadcrumbs items={[{ label: "File Upload" }]} />
+      <Breadcrumbs items={[{ label: "File Processing" }]} />
       
       {notification && (
         <div className="fixed top-20 right-4 z-50 w-96">
@@ -265,10 +265,10 @@ export default function FilesPage() {
       <div className="space-y-6 overflow-y-auto">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">File Upload</h1>
+            <h1 className="text-3xl font-bold text-slate-900">File Processing</h1>
             <p className="text-slate-600 mt-2">
-              Upload PDF or DOCX documents for automatic text extraction and processing. 
-              Large files are automatically chunked and stored in vector database for efficient AI processing.
+              Process PDF and DOCX documents with automatic text extraction, PII detection, and AI-powered analysis. 
+              Large files are automatically chunked and stored in vector database for efficient semantic search and processing.
             </p>
           </div>
           <Button
@@ -285,9 +285,9 @@ export default function FilesPage() {
         {!fileResult ? (
             <Card className="border border-slate-200">
               <CardHeader>
-                <CardTitle>Drag & Drop File Upload</CardTitle>
+                <CardTitle>Upload Document</CardTitle>
                 <CardDescription>
-                  Upload PDF or DOCX files for processing
+                  Upload PDF or DOCX files for text extraction and processing
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -356,7 +356,7 @@ export default function FilesPage() {
                         {fileResult.filename}
                       </CardTitle>
                       <CardDescription className="mt-1">
-                        File uploaded and processed successfully
+                        File processed successfully
                       </CardDescription>
                     </div>
                     <Button variant="ghost" size="sm" onClick={resetUpload}>

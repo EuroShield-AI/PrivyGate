@@ -262,7 +262,7 @@ export default function DashboardLayout({
               }`}
             >
               <FileText className="h-5 w-5" />
-              <span>File Upload</span>
+              <span>File Processing</span>
             </Link>
             <Link
               href="/dashboard/gdpr"
