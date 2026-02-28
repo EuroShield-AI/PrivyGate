@@ -1,0 +1,54 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Job {
+  id           String   @id @default(uuid())
+  createdAt    DateTime @default(now())
+  type         String
+  retentionMode String
+  status       String
+  originalText String?  @db.Text
+  redactedText String?  @db.Text
+  detectedEntities DetectedEntity[]
+  auditLogs    AuditLog[]
+
+  @@index([id])
+  @@map("jobs")
+}
+
+model DetectedEntity {
+  id                String   @id @default(uuid())
+  jobId             String
+  entityType        String
+  token             String
+  originalEncrypted String   @db.Text
+  confidence        Float
+  startIndex        Int?
+  endIndex          Int?
+  job               Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@map("detected_entities")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  jobId     String
+  eventType String
+  timestamp DateTime @default(now())
+  metadata  String   @db.Text
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([timestamp])
+  @@map("audit_logs")
+}
