@@ -3,7 +3,7 @@ import { z } from "zod";
 import { verifyOTP } from "@/lib/otp";
 import { db, users } from "@/lib/db";
 import { eq } from "drizzle-orm";
-import { sign } from "next-auth/jwt";
+import jwt from "jsonwebtoken";
 
 const verifyOTPSchema = z.object({
   email: z.string().email(),
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate JWT token
-    const token = await sign(
+    const token = jwt.sign(
       {
         id: user.id,
         email: user.email,
