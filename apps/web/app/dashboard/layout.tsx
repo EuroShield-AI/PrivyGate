@@ -175,20 +175,20 @@ export default function DashboardLayout({
         </div>
       )}
       {/* Topbar */}
-      <header className="bg-white border-b border-slate-200 z-50 shadow-sm flex-shrink-0">
+      <header className="bg-slate-800 border-b border-slate-700 z-50 shadow-sm flex-shrink-0">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden"
+              className="lg:hidden text-slate-200 hover:text-white hover:bg-slate-700"
             >
               {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
             <Link href="/dashboard" className="flex items-center gap-2">
-              <Shield className="h-6 w-6 text-blue-600" />
-              <span className="text-xl font-bold text-slate-900">PrivyGate</span>
+              <Shield className="h-6 w-6 text-blue-400" />
+              <span className="text-xl font-bold text-white">PrivyGate</span>
             </Link>
           </div>
 
@@ -196,41 +196,37 @@ export default function DashboardLayout({
             {/* Model Selector - Only show if API key is configured */}
             {mistralConfigured && (
               <div className="hidden md:flex items-center gap-3">
-                <div className="text-right">
-                  <p className="text-xs text-slate-500 mb-1">Model</p>
-                  <Select value={model} onValueChange={handleModelChange} disabled={savingModel}>
-                    <SelectTrigger className="w-[200px] h-8 text-sm border-slate-200">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="mistral-large-2512">Mistral Large 3</SelectItem>
-                      <SelectItem value="mistral-medium-3101">Mistral Medium 3.1</SelectItem>
-                      <SelectItem value="mistral-small-3201">Mistral Small 3.2</SelectItem>
-                      <SelectItem value="ministral-3-14b-2512">Ministral 3 14B</SelectItem>
-                      <SelectItem value="ministral-3-8b-2512">Ministral 3 8B</SelectItem>
-                      <SelectItem value="ministral-3-3b-2512">Ministral 3 3B</SelectItem>
-                      <SelectItem value="magistral-medium-2509">Magistral Medium 1.2</SelectItem>
-                      <SelectItem value="magistral-small-2509">Magistral Small 1.2</SelectItem>
-                      <SelectItem value="devstral-2-2512">Devstral 2</SelectItem>
-                      <SelectItem value="codestral-2508">Codestral</SelectItem>
-                      <SelectItem value="pixtral-large-2411">Pixtral Large</SelectItem>
-                      <SelectItem value="mistral-large-2-1-2411">Mistral Large 2.1</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <span className="h-2 w-2 bg-green-500 rounded-full" title="Mistral API configured" />
+                <Select value={model} onValueChange={handleModelChange} disabled={savingModel}>
+                  <SelectTrigger className="w-[200px] h-8 text-sm border-slate-600 bg-slate-700 text-slate-200 hover:bg-slate-600">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="mistral-large-2512">Mistral Large 3</SelectItem>
+                    <SelectItem value="mistral-medium-3101">Mistral Medium 3.1</SelectItem>
+                    <SelectItem value="mistral-small-3201">Mistral Small 3.2</SelectItem>
+                    <SelectItem value="ministral-3-14b-2512">Ministral 3 14B</SelectItem>
+                    <SelectItem value="ministral-3-8b-2512">Ministral 3 8B</SelectItem>
+                    <SelectItem value="ministral-3-3b-2512">Ministral 3 3B</SelectItem>
+                    <SelectItem value="magistral-medium-2509">Magistral Medium 1.2</SelectItem>
+                    <SelectItem value="magistral-small-2509">Magistral Small 1.2</SelectItem>
+                    <SelectItem value="devstral-2-2512">Devstral 2</SelectItem>
+                    <SelectItem value="codestral-2508">Codestral</SelectItem>
+                    <SelectItem value="pixtral-large-2411">Pixtral Large</SelectItem>
+                    <SelectItem value="mistral-large-2-1-2411">Mistral Large 2.1</SelectItem>
+                  </SelectContent>
+                </Select>
+                <span className="h-2 w-2 bg-green-400 rounded-full" title="Mistral API configured" />
               </div>
             )}
 
             {/* User & Logout */}
             <div className="flex items-center gap-3">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-medium text-slate-900">
+                <p className="text-sm font-medium text-white">
                   {userName || user?.email || "User"}
                 </p>
-                <p className="text-xs text-slate-500">{user?.role || "user"}</p>
               </div>
-              <Button variant="ghost" size="icon" onClick={handleLogout} title="Logout">
+              <Button variant="ghost" size="icon" onClick={handleLogout} title="Logout" className="text-slate-200 hover:text-white hover:bg-slate-700">
                 <LogOut className="h-5 w-5" />
               </Button>
             </div>
@@ -241,7 +237,7 @@ export default function DashboardLayout({
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <aside
-          className={`bg-white border-r border-slate-200 transition-all duration-300 flex-shrink-0 ${
+          className={`bg-slate-800 border-r border-slate-700 transition-all duration-300 flex-shrink-0 ${
             sidebarOpen ? "w-64" : "w-0"
           } overflow-hidden ${sidebarOpen ? "" : "hidden"} lg:block h-full`}
         >
@@ -250,8 +246,8 @@ export default function DashboardLayout({
               href="/dashboard"
               className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
                 pathname === "/dashboard"
-                  ? "bg-blue-50 text-blue-700 font-medium"
-                  : "text-slate-700 hover:bg-slate-100"
+                  ? "bg-slate-700 text-white font-medium"
+                  : "text-slate-200 hover:bg-slate-700 hover:text-white"
               }`}
             >
               <Zap className="h-5 w-5" />
@@ -261,8 +257,8 @@ export default function DashboardLayout({
               href="/dashboard/files"
               className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
                 pathname === "/dashboard/files"
-                  ? "bg-blue-50 text-blue-700 font-medium"
-                  : "text-slate-700 hover:bg-slate-100"
+                  ? "bg-slate-700 text-white font-medium"
+                  : "text-slate-200 hover:bg-slate-700 hover:text-white"
               }`}
             >
               <FileText className="h-5 w-5" />
@@ -272,8 +268,8 @@ export default function DashboardLayout({
               href="/dashboard/gdpr"
               className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
                 pathname === "/dashboard/gdpr"
-                  ? "bg-blue-50 text-blue-700 font-medium"
-                  : "text-slate-700 hover:bg-slate-100"
+                  ? "bg-slate-700 text-white font-medium"
+                  : "text-slate-200 hover:bg-slate-700 hover:text-white"
               }`}
             >
               <Globe className="h-5 w-5" />
@@ -283,8 +279,8 @@ export default function DashboardLayout({
               href="/dashboard/settings"
               className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
                 pathname === "/dashboard/settings"
-                  ? "bg-blue-50 text-blue-700 font-medium"
-                  : "text-slate-700 hover:bg-slate-100"
+                  ? "bg-slate-700 text-white font-medium"
+                  : "text-slate-200 hover:bg-slate-700 hover:text-white"
               }`}
             >
               <Settings className="h-5 w-5" />
