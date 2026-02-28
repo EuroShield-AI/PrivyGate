@@ -48,15 +48,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { url } = analyzeSchema.parse(body);
 
-    // Get user's Mistral API key for AI analysis
+    // Get user's Mistral API key for AI analysis (optional but recommended)
     const mistralApiKey = await getMistralApiKey(auth.user.id);
-    
-    if (!mistralApiKey) {
-      return NextResponse.json(
-        { error: "Mistral API key not configured. Please set it in Settings to enable comprehensive GDPR analysis." },
-        { status: 400 }
-      );
-    }
 
     // Create a status update callback for real-time updates
     const statusUpdates: string[] = [];
@@ -64,7 +57,7 @@ export async function POST(request: NextRequest) {
       statusUpdates.push(status);
     };
 
-    const report = await analyzeWebsite(url, mistralApiKey, onStatusUpdate);
+    const report = await analyzeWebsite(url, mistralApiKey || undefined, onStatusUpdate);
 
     return NextResponse.json({
       ...report,
