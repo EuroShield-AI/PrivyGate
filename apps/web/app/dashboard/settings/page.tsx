@@ -19,6 +19,8 @@ export default function SettingsPage() {
   const [checking, setChecking] = useState(true);
   const [notification, setNotification] = useState<{ type: "success" | "error" | "info" | "warning"; message: string } | null>(null);
   const [user, setUser] = useState<any>(null);
+  const [name, setName] = useState("");
+  const [savingName, setSavingName] = useState(false);
   const [oauthClientId, setOauthClientId] = useState("pk_live_51H8xK2...");
   const [oauthClientSecret, setOauthClientSecret] = useState("sk_live_51H8xK2...");
 
@@ -36,7 +38,25 @@ export default function SettingsPage() {
 
     // Check if API key is configured
     checkApiKeyStatus();
+    
+    // Fetch user profile
+    fetchProfile();
   }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/settings/profile", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setName(data.name || "");
+      }
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+    }
+  };
 
   const checkApiKeyStatus = async () => {
     setChecking(true);
@@ -127,6 +147,35 @@ export default function SettingsPage() {
   const copyToClipboard = async (text: string) => {
     await navigator.clipboard.writeText(text);
     showNotification("success", "Copied to clipboard");
+  };
+
+  const handleSaveName = async () => {
+    setSavingName(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/settings/profile", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: name.trim() || null }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to save name");
+      }
+
+      showNotification("success", "Name saved successfully");
+      // Update local storage token payload would require re-login, so we'll just refresh
+      window.location.reload();
+    } catch (error) {
+      console.error("Error saving name:", error);
+      showNotification("error", error instanceof Error ? error.message : "Failed to save name");
+    } finally {
+      setSavingName(false);
+    }
   };
 
   return (
@@ -239,18 +288,38 @@ export default function SettingsPage() {
 
         <Card className="border border-slate-200">
           <CardHeader>
-            <CardTitle>Profile Settings</CardTitle>
-            <CardDescription>Update your account information</CardDescription>
+            <CardTitle>Display Name</CardTitle>
+            <CardDescription>Set your display name (shown instead of email)</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={user?.email || ""} disabled />
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                type="text"
+                placeholder="Enter your name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                disabled={savingName}
+                maxLength={255}
+              />
+              <p className="text-xs text-slate-500 mt-1">
+                This name will be displayed instead of your email in the dashboard
+              </p>
             </div>
-            <div>
-              <Label htmlFor="role">Role</Label>
-              <Input id="role" type="text" value={user?.role || "user"} disabled />
-            </div>
+            <Button onClick={handleSaveName} disabled={savingName || name.trim() === (user?.name || "")}>
+              {savingName ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Name
+                </>
+              )}
+            </Button>
           </CardContent>
         </Card>
         </div>

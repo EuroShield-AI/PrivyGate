@@ -19,6 +19,7 @@ export default function DashboardLayout({
   const [tokenUsage, setTokenUsage] = useState({ used: 0, limit: 1000000 });
   const [model, setModel] = useState("mistral-large-latest");
   const [mistralConfigured, setMistralConfigured] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -41,7 +42,27 @@ export default function DashboardLayout({
     
     // Check Mistral API key status
     checkMistralStatus();
+    
+    // Fetch user profile for name
+    fetchUserProfile();
   }, [router]);
+
+  const fetchUserProfile = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      
+      const response = await fetch("/api/settings/profile", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUserName(data.name);
+      }
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+    }
+  };
 
   const checkMistralStatus = async () => {
     try {
