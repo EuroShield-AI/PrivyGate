@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { db, files, vectorChunks, auditLogs } from "@/lib/db";
 import { saveUploadedFile, getMimeType } from "@/lib/upload";
 import { extractTextFromFile, chunkText } from "@/lib/file-extractor";
 import { AuditLogger } from "@/lib/audit";
 import { storeDocumentChunks } from "@/lib/vector-db";
+import { v4 as uuidv4 } from "uuid";
 
 export async function POST(request: NextRequest) {
   try {
@@ -71,54 +72,48 @@ export async function POST(request: NextRequest) {
     }
 
     // Save file record to database
-    const fileRecord = await prisma.file.create({
-      data: {
-        filename,
-        originalName: file.name,
-        mimeType,
-        size: file.size,
-        filePath,
-        extractedText: useVectorDB ? null : extracted.text, // Don't store full text if using vector DB
-        chunkCount,
-        useVectorDB,
-      },
+    const fileId = uuidv4();
+    await db.insert(files).values({
+      id: fileId,
+      filename,
+      originalName: file.name,
+      mimeType,
+      size: file.size,
+      filePath,
+      extractedText: useVectorDB ? null : extracted.text, // Don't store full text if using vector DB
+      chunkCount,
+      useVectorDB: useVectorDB ? 1 : 0,
     });
 
     // Update vector chunks with file ID if vector DB was used
     if (useVectorDB && vectorIds.length > 0) {
       // Store chunk metadata in database
       const chunks = chunkText(extracted.text, 2000, 200);
-      for (let i = 0; i < chunks.length; i++) {
-        await prisma.vectorChunk.create({
-          data: {
-            fileId: fileRecord.id,
-            chunkIndex: i,
-            content: chunks[i],
-            vectorId: vectorIds[i],
-          },
-        });
+      const chunkInserts = chunks.map((content, i) => ({
+        id: uuidv4(),
+        fileId,
+        chunkIndex: i,
+        content,
+        vectorId: vectorIds[i] || null,
+      }));
+      
+      if (chunkInserts.length > 0) {
+        await db.insert(vectorChunks).values(chunkInserts);
       }
     }
 
     // Create audit log
     const auditLogger = new AuditLogger();
-    await prisma.auditLog.create({
-      data: {
-        jobId: fileRecord.id, // Using file ID as temporary job ID
-        eventType: "FILE_UPLOADED",
-        timestamp: new Date(),
-        metadata: JSON.stringify({
-          filename: file.name,
-          size: file.size,
-          mimeType,
-          wordCount: extracted.wordCount,
-          pageCount: extracted.pageCount,
-        }),
-      },
+    await auditLogger.log(fileId, "FILE_UPLOADED", {
+      filename: file.name,
+      size: file.size,
+      mimeType,
+      wordCount: extracted.wordCount,
+      pageCount: extracted.pageCount,
     });
 
     return NextResponse.json({
-      fileId: fileRecord.id,
+      fileId,
       filename: file.name,
       extractedText: extracted.text,
       wordCount: extracted.wordCount,

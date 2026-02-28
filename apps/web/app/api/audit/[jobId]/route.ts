@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { db, jobs, auditLogs, detectedEntities } from "@/lib/db";
+import { eq, asc } from "drizzle-orm";
 
 export async function GET(
   request: NextRequest,
@@ -8,17 +9,21 @@ export async function GET(
   try {
     const { jobId } = await params;
 
-    const auditLogs = await prisma.auditLog.findMany({
-      where: { jobId },
-      orderBy: { timestamp: "asc" },
-    });
+    const auditLogsResult = await db.select()
+      .from(auditLogs)
+      .where(eq(auditLogs.jobId, jobId))
+      .orderBy(asc(auditLogs.timestamp));
 
-    const job = await prisma.job.findUnique({
-      where: { id: jobId },
-      include: {
-        detectedEntities: true,
-      },
-    });
+    const jobResults = await db.select()
+      .from(jobs)
+      .where(eq(jobs.id, jobId))
+      .limit(1);
+    
+    const job = jobResults[0];
+
+    const entitiesResult = job ? await db.select()
+      .from(detectedEntities)
+      .where(eq(detectedEntities.jobId, jobId)) : [];
 
     return NextResponse.json({
       jobId,
@@ -29,10 +34,10 @@ export async function GET(
             status: job.status,
             retentionMode: job.retentionMode,
             createdAt: job.createdAt,
-            entityCount: job.detectedEntities.length,
+            entityCount: entitiesResult.length,
           }
         : null,
-      auditLogs: auditLogs.map((log) => ({
+      auditLogs: auditLogsResult.map((log) => ({
         id: log.id,
         eventType: log.eventType,
         timestamp: log.timestamp,

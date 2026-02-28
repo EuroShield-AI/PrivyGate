@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/db";
+import { db, files, jobs, detectedEntities } from "@/lib/db";
 import { PIIDetector, PseudonymizationVault } from "@/lib/privacy-engine";
 import { encrypt } from "@/lib/encryption";
 import { AuditLogger } from "@/lib/audit";
+import { eq } from "drizzle-orm";
+import { v4 as uuidv4 } from "uuid";
 
 const redactFileSchema = z.object({
   fileId: z.string().uuid(),
@@ -23,9 +25,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Get file
-    const file = await prisma.file.findUnique({
-      where: { id: fileId },
-    });
+    const fileResults = await db.select().from(files).where(eq(files.id, fileId)).limit(1);
+    const file = fileResults[0];
 
     if (!file) {
       return NextResponse.json({ error: "File not found" }, { status: 404 });
@@ -39,14 +40,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Create job
-    const job = await prisma.job.create({
-      data: {
-        type: "redaction",
-        retentionMode,
-        status: "processing",
-        originalText: file.extractedText,
-        fileId: file.id,
-      },
+    const jobId = uuidv4();
+    await db.insert(jobs).values({
+      id: jobId,
+      type: "redaction",
+      retentionMode: retentionMode || "standard",
+      status: "processing",
+      originalText: file.extractedText,
+      fileId: file.id,
     });
 
     // Detect PII
@@ -59,54 +60,47 @@ export async function POST(request: NextRequest) {
 
     // Store entities in database
     const encryptionSecret = process.env.ENCRYPTION_SECRET;
-    for (const entity of entities) {
-      const token = vault.getToken(entity.value);
-      if (token) {
-        await prisma.detectedEntity.create({
-          data: {
-            jobId: job.id,
-            entityType: entity.type,
-            token,
-            originalEncrypted: encrypt(entity.value, encryptionSecret),
-            confidence: entity.confidence,
-            startIndex: entity.startIndex,
-            endIndex: entity.endIndex,
-          },
-        });
+    const entityInserts = entities.map((entity) => {
+      const token = vault.getToken(entity.value) || vault.generateToken(entity.type);
+      if (!vault.getToken(entity.value)) {
+        vault.addMapping(entity.value, token);
       }
+      return {
+        id: uuidv4(),
+        jobId,
+        entityType: entity.type,
+        token: token,
+        originalEncrypted: encrypt(entity.value, encryptionSecret),
+        confidence: entity.confidence.toString(),
+        startIndex: entity.startIndex,
+        endIndex: entity.endIndex,
+      };
+    });
+
+    if (entityInserts.length > 0) {
+      await db.insert(detectedEntities).values(entityInserts);
     }
+
+    // Update job status
+    await db.update(jobs)
+      .set({ status: "completed", redactedText })
+      .where(eq(jobs.id, jobId));
 
     // Create audit log
     const auditLogger = new AuditLogger();
-    await prisma.auditLog.create({
-      data: {
-        jobId: job.id,
-        eventType: "REDACTION_COMPLETED",
-        timestamp: new Date(),
-        metadata: JSON.stringify({
-          entityTypes: entities.map((e) => e.type),
-          entityCount: entities.length,
-          fileId: file.id,
-          filename: file.originalName,
-        }),
-      },
-    });
-
-    // Update job status
-    await prisma.job.update({
-      where: { id: job.id },
-      data: {
-        status: "completed",
-        redactedText,
-      },
+    await auditLogger.log(jobId, "REDACTION_COMPLETED", {
+      entityTypes: entities.map((e) => e.type),
+      entityCount: entities.length,
+      fileId: file.id,
+      filename: file.originalName,
     });
 
     return NextResponse.json({
-      jobId: job.id,
+      jobId,
       redactedText,
       entities: entities.map((e) => ({
         type: e.type,
-        token: vault.getToken(e.value),
+        token: vault.getToken(e.value) || '',
         confidence: e.confidence,
       })),
       fileInfo: {

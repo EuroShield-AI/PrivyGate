@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/db";
+import { db, users } from "@/lib/db";
 import { hash } from "bcryptjs";
 import { logger } from "@/lib/logger";
+import { eq } from "drizzle-orm";
+import { v4 as uuidv4 } from "uuid";
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -16,11 +18,12 @@ export async function POST(request: NextRequest) {
     const { email, password, name } = registerSchema.parse(body);
 
     // Check if user exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
+    const existingUsers = await db.select()
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
 
-    if (existingUser) {
+    if (existingUsers.length > 0) {
       return NextResponse.json(
         { error: "User already exists" },
         { status: 400 }
@@ -31,25 +34,24 @@ export async function POST(request: NextRequest) {
     const passwordHash = await hash(password, 12);
 
     // Create user
-    const user = await prisma.user.create({
-      data: {
+    const userId = uuidv4();
+    await db.insert(users).values({
+      id: userId,
+      email,
+      passwordHash,
+      name: name || null,
+      role: "user",
+    });
+
+    logger.info("User registered", { userId, email });
+
+    return NextResponse.json({
+      user: {
+        id: userId,
         email,
-        passwordHash,
         name: name || null,
         role: "user",
       },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-      },
-    });
-
-    logger.info("User registered", { userId: user.id, email: user.email });
-
-    return NextResponse.json({
-      user,
       message: "User created successfully",
     });
   } catch (error) {

@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/db";
+import { db, jobs } from "@/lib/db";
 import {
   summarizeText,
   extractActions,
   classifyText,
 } from "@/lib/mistral";
 import { AuditLogger } from "@/lib/audit";
+import { eq } from "drizzle-orm";
 
 const processSchema = z.object({
   jobId: z.string().uuid(),
@@ -18,13 +19,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { jobId, taskType } = processSchema.parse(body);
 
-    // Get job and redacted text
-    const job = await prisma.job.findUnique({
-      where: { id: jobId },
-      include: {
-        detectedEntities: true,
-      },
-    });
+    // Get job
+    const jobResults = await db.select().from(jobs).where(eq(jobs.id, jobId)).limit(1);
+    const job = jobResults[0];
 
     if (!job) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
@@ -39,14 +36,7 @@ export async function POST(request: NextRequest) {
 
     // Create audit log for processing start
     const auditLogger = new AuditLogger();
-    await prisma.auditLog.create({
-      data: {
-        jobId,
-        eventType: "PROCESSING_STARTED",
-        timestamp: new Date(),
-        metadata: JSON.stringify({ taskType }),
-      },
-    });
+    await auditLogger.log(jobId, "PROCESSING_STARTED", { taskType });
 
     // Process based on task type
     let result: unknown;
@@ -67,17 +57,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Create audit log for processing completion
-    await prisma.auditLog.create({
-      data: {
-        jobId,
-        eventType: "PROCESSING_COMPLETED",
-        timestamp: new Date(),
-        metadata: JSON.stringify({
-          taskType,
-          modelUsed,
-          success: true,
-        }),
-      },
+    await auditLogger.log(jobId, "PROCESSING_COMPLETED", {
+      taskType,
+      modelUsed,
+      success: true,
     });
 
     return NextResponse.json({

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/db";
+import { db, jobs, detectedEntities } from "@/lib/db";
 import { decrypt } from "@/lib/encryption";
 import { EntityType } from "@/lib/privacy-engine";
 import { AuditLogger } from "@/lib/audit";
+import { eq } from "drizzle-orm";
 
 const revealSchema = z.object({
   jobId: z.string().uuid(),
@@ -23,23 +24,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get job and entities
-    const job = await prisma.job.findUnique({
-      where: { id: jobId },
-      include: {
-        detectedEntities: true,
-      },
-    });
+    // Get job
+    const jobResults = await db.select().from(jobs).where(eq(jobs.id, jobId)).limit(1);
+    const job = jobResults[0];
 
     if (!job) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
+    // Get entities
+    const entitiesResult = await db.select()
+      .from(detectedEntities)
+      .where(eq(detectedEntities.jobId, jobId));
+
     // Create token map from entities
     const tokenMap = new Map<string, string>();
     const encryptionSecret = process.env.ENCRYPTION_SECRET;
 
-    for (const entity of job.detectedEntities) {
+    for (const entity of entitiesResult) {
       if (!allowedTypes || allowedTypes.includes(entity.entityType as EntityType)) {
         try {
           const original = decrypt(entity.originalEncrypted, encryptionSecret);
@@ -58,16 +60,9 @@ export async function POST(request: NextRequest) {
 
     // Create audit log
     const auditLogger = new AuditLogger();
-    await prisma.auditLog.create({
-      data: {
-        jobId,
-        eventType: "REVEAL_REQUESTED",
-        timestamp: new Date(),
-        metadata: JSON.stringify({
-          allowedTypes: allowedTypes || "all",
-          revealedCount: tokenMap.size,
-        }),
-      },
+    await auditLogger.log(jobId, "REVEAL_REQUESTED", {
+      allowedTypes: allowedTypes || "all",
+      revealedCount: tokenMap.size,
     });
 
     return NextResponse.json({

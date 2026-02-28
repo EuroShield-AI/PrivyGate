@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { db, auditLogs } from "@/lib/db";
+import { v4 as uuidv4 } from "uuid";
 
 export const AuditEventSchema = z.object({
   jobId: z.string().uuid(),
@@ -24,6 +26,16 @@ export interface AuditRecord {
 }
 
 export class AuditLogger {
+  async log(jobId: string, eventType: string, metadata?: Record<string, unknown>): Promise<void> {
+    await db.insert(auditLogs).values({
+      id: uuidv4(),
+      jobId,
+      eventType,
+      metadata: JSON.stringify(metadata || {}),
+      timestamp: new Date(),
+    });
+  }
+
   createAuditRecord(event: AuditEvent): Omit<AuditRecord, "id"> {
     return {
       jobId: event.jobId,

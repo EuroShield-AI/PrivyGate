@@ -321,11 +321,15 @@ export default function Home() {
                   <div className="space-y-2">
                     <Label>Detected Entities</Label>
                     <div className="flex flex-wrap gap-2">
-                      {redactionResult.entities.map((entity, idx) => (
-                        <Badge key={idx} variant="secondary">
-                          {entity.type}: {entity.token} ({Math.round(entity.confidence * 100)}%)
-                        </Badge>
-                      ))}
+                      {redactionResult.entities && redactionResult.entities.length > 0 ? (
+                        redactionResult.entities.map((entity, idx) => (
+                          <Badge key={idx} variant="secondary">
+                            {entity.type}: {entity.token} ({Math.round(entity.confidence * 100)}%)
+                          </Badge>
+                        ))
+                      ) : (
+                        <span className="text-sm text-muted-foreground">No entities detected</span>
+                      )}
                     </div>
                   </div>
                   <div className="text-xs text-slate-500">

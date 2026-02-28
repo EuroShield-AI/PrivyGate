@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/db";
+import { db, jobs, detectedEntities } from "@/lib/db";
 import { PIIDetector, PseudonymizationVault } from "@/lib/privacy-engine";
 import { encrypt } from "@/lib/encryption";
 import { AuditLogger } from "@/lib/audit";
+import { eq } from "drizzle-orm";
+import { v4 as uuidv4 } from "uuid";
 
 const redactSchema = z.object({
   text: z.string().min(1),
@@ -23,91 +25,75 @@ export async function POST(request: NextRequest) {
     }
 
     // Create job
-    const job = await prisma.job.create({
-      data: {
-        type: "redaction",
-        retentionMode,
-        status: "processing",
-        originalText: text,
-      },
+    const jobId = uuidv4();
+    await db.insert(jobs).values({
+      id: jobId,
+      type: "redaction",
+      status: "processing",
+      originalText: text,
+      retentionMode: retentionMode || "standard",
     });
 
-    // Detect PII
+    // Detect and pseudonymize PII
     const detector = new PIIDetector();
-    const entities = detector.detect(text);
-
-    // Pseudonymize
     const vault = new PseudonymizationVault();
-    const redactedText = vault.pseudonymize(text, entities);
+    const detected = detector.detect(text);
+    const redactedText = vault.pseudonymize(text, detected);
 
-    // Store entities in database
-    const encryptionSecret = process.env.ENCRYPTION_SECRET;
-    for (const entity of entities) {
-      const token = vault.getToken(entity.value);
-      if (token) {
-        await prisma.detectedEntity.create({
-          data: {
-            jobId: job.id,
-            entityType: entity.type,
-            token,
-            originalEncrypted: encrypt(entity.value, encryptionSecret),
-            confidence: entity.confidence,
-            startIndex: entity.startIndex,
-            endIndex: entity.endIndex,
-          },
-        });
+    // Store detected entities and prepare response
+    const entityInserts = detected.map((entity) => {
+      const token = vault.getToken(entity.value) || vault.generateToken(entity.type);
+      if (!vault.getToken(entity.value)) {
+        vault.addMapping(entity.value, token);
       }
+      return {
+        id: uuidv4(),
+        jobId,
+        entityType: entity.type,
+        token: token,
+        originalEncrypted: encrypt(entity.value, process.env.ENCRYPTION_SECRET!),
+        confidence: entity.confidence.toString(),
+        startIndex: entity.startIndex,
+        endIndex: entity.endIndex,
+      };
+    });
+
+    if (entityInserts.length > 0) {
+      await db.insert(detectedEntities).values(entityInserts);
     }
 
-    // Create audit log
+    // Update job with redacted text
+    await db.update(jobs)
+      .set({ redactedText })
+      .where(eq(jobs.id, jobId));
+
+    // Log audit event
     const auditLogger = new AuditLogger();
-    const auditRecord = auditLogger.createAuditRecord({
-      jobId: job.id,
-      eventType: "REDACTION_COMPLETED",
-      metadata: {
-        entityTypes: entities.map((e) => e.type),
-        entityCount: entities.length,
-      },
+    await auditLogger.log(jobId, "REDACTION_COMPLETED", {
+      entitiesDetected: detected.length,
+      retentionMode,
     });
 
-    await prisma.auditLog.create({
-      data: {
-        jobId: auditRecord.jobId,
-        eventType: auditRecord.eventType,
-        timestamp: auditRecord.timestamp,
-        metadata: JSON.stringify(auditRecord.metadata),
-      },
-    });
-
-    // Update job status with redacted text
-    await prisma.job.update({
-      where: { id: job.id },
-      data: { 
-        status: "completed",
-        redactedText,
-      },
+    // Prepare entities for response
+    const entitiesResponse = detected.map((entity) => {
+      const token = vault.getToken(entity.value);
+      return {
+        type: entity.type,
+        token: token || '',
+        confidence: entity.confidence,
+      };
     });
 
     return NextResponse.json({
-      jobId: job.id,
+      jobId,
       redactedText,
-      entities: entities.map((e) => ({
-        type: e.type,
-        token: vault.getToken(e.value),
-        confidence: e.confidence,
-      })),
+      entities: entitiesResponse,
+      entitiesDetected: detected.length,
     });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid request", details: error.errors },
-        { status: 400 }
-      );
-    }
-
     console.error("Redaction error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: error instanceof Error ? error.message : "Internal server error" },
       { status: 500 }
     );
   }

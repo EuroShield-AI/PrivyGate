@@ -1,12 +1,11 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import { prisma } from "@/lib/db";
+import { db, users } from "@/lib/db";
 import { compare } from "bcryptjs";
 import { logger } from "@/lib/logger";
+import { eq } from "drizzle-orm";
 
 const handler = NextAuth({
-  adapter: PrismaAdapter(prisma) as any,
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -19,9 +18,12 @@ const handler = NextAuth({
           return null;
         }
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-        });
+        const userResults = await db.select()
+          .from(users)
+          .where(eq(users.email, credentials.email))
+          .limit(1);
+
+        const user = userResults[0];
 
         if (!user || !user.passwordHash) {
           return null;

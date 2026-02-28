@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { db, jobs } from "@/lib/db";
 
 export async function GET() {
   try {
-    // Check database connection
-    await prisma.$queryRaw`SELECT 1`;
+    // Check database connection by trying to query
+    await db.select().from(jobs).limit(1);
 
     return NextResponse.json({
       status: "healthy",
