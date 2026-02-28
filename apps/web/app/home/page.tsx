@@ -257,7 +257,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t bg-white py-8">
         <div className="container mx-auto px-4 text-center text-slate-600">
-          <p>&copy; 2024 PrivyGate. Built for privacy and compliance.</p>
+          <p>&copy; 2026 PrivyGate. Built for privacy and compliance.</p>
         </div>
       </footer>
     </div>

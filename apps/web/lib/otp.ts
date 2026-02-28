@@ -68,33 +68,30 @@ export async function verifyOTP(email: string, code: string): Promise<boolean> {
 }
 
 export async function sendOTPEmail(email: string, code: string): Promise<void> {
-  // In development, skip email sending (code is logged to console)
-  if (process.env.NODE_ENV === "development") {
-    console.log(`OTP for ${email}: ${code}`);
-    return;
-  }
-
-  // In production, use a proper email service (SendGrid, AWS SES, etc.)
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
-    console.log(`OTP for ${email}: ${code} (SMTP not configured)`);
-    return;
-  }
-
   try {
     const nodemailer = await import("nodemailer");
 
+    // Use localhost postfix for local mail server
     const transporter = nodemailer.default.createTransport({
-      host: process.env.SMTP_HOST || "smtp.gmail.com",
-      port: parseInt(process.env.SMTP_PORT || "587"),
-      secure: false,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASSWORD,
+      host: process.env.SMTP_HOST || "localhost",
+      port: parseInt(process.env.SMTP_PORT || "25"),
+      secure: false, // true for 465, false for other ports
+      tls: {
+        rejectUnauthorized: false, // For localhost postfix
       },
+      // No auth needed for localhost postfix
+      ...(process.env.SMTP_USER && process.env.SMTP_PASSWORD
+        ? {
+            auth: {
+              user: process.env.SMTP_USER,
+              pass: process.env.SMTP_PASSWORD,
+            },
+          }
+        : {}),
     });
 
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || "noreply@privygate.com",
+      from: process.env.SMTP_FROM || "noreply@localhost",
       to: email,
       subject: "Your PrivyGate Login Code",
       html: `
@@ -108,10 +105,13 @@ export async function sendOTPEmail(email: string, code: string): Promise<void> {
           <p>If you didn't request this code, please ignore this email.</p>
         </div>
       `,
+      text: `Your PrivyGate Login Code: ${code}\n\nThis code will expire in 10 minutes.`,
     });
+
+    console.log(`OTP email sent to ${email}`);
   } catch (error) {
     console.error("Failed to send OTP email:", error);
-    // Fallback: log to console
-    console.log(`OTP for ${email}: ${code}`);
+    // Fallback: log to console for development
+    console.log(`OTP for ${email}: ${code} (email sending failed, check postfix configuration)`);
   }
 }
