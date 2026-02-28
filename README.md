@@ -234,13 +234,33 @@ The app will be available at `http://localhost:3000`
 
 ### Docker Setup
 
-Alternatively, use Docker Compose:
+Alternatively, use Docker Compose for a complete setup with MySQL and ChromaDB:
 
 ```bash
 docker-compose up -d
 ```
 
-This will start MySQL and the application. Make sure to set `MISTRAL_API_KEY` and `ENCRYPTION_SECRET` in your environment or `.env` file.
+This will start:
+- MySQL database
+- ChromaDB vector database  
+- PrivyGate application
+
+Make sure to set required environment variables in your `.env` file:
+- `MISTRAL_API_KEY`
+- `ENCRYPTION_SECRET`
+- `NEXTAUTH_SECRET` (generate with: `openssl rand -base64 32`)
+
+### Enterprise Features
+
+PrivyGate includes enterprise-ready features:
+
+- **Rate Limiting**: API rate limiting with Upstash Redis (100 requests/hour default)
+- **Authentication**: NextAuth.js with JWT sessions and user management
+- **Vector Database**: ChromaDB for large file processing with automatic chunking
+- **Health Checks**: `/api/health` endpoint for monitoring
+- **Structured Logging**: JSON-formatted logs for production
+- **File Processing**: Automatic chunking for files > 10k words
+- **Compliance**: Full audit trails and RoPA exports
 
 ## Roadmap
 
