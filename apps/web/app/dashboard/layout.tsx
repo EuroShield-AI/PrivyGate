@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { Shield, LogOut, Menu, X, FileText, Globe, Settings, BarChart3, Zap } from "lucide-react";
+import { Shield, LogOut, Menu, X, FileText, Globe, Settings, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function DashboardLayout({
