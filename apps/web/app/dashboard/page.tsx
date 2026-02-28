@@ -129,12 +129,21 @@ export default function DashboardPage() {
     }
   };
 
+  const [apiBaseUrl, setApiBaseUrl] = useState("");
+
+  useEffect(() => {
+    // Get current domain from window location
+    if (typeof window !== "undefined") {
+      setApiBaseUrl(window.location.origin);
+    }
+  }, []);
+
   const apiExamples = [
     {
       endpoint: "/api/redact",
       method: "POST",
       description: "Detect and redact PII from text",
-      curl: `curl -X POST https://api.privygate.com/api/redact \\
+      curl: `curl -X POST ${apiBaseUrl || "https://api.privygate.com"}/api/redact \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -156,7 +165,7 @@ export default function DashboardPage() {
       endpoint: "/api/process",
       method: "POST",
       description: "Process redacted text with AI",
-      curl: `curl -X POST https://api.privygate.com/api/process \\
+      curl: `curl -X POST ${apiBaseUrl || "https://api.privygate.com"}/api/process \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{

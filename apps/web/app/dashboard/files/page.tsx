@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -200,12 +200,21 @@ export default function FilesPage() {
     setShowExtractedText(false);
   };
 
+  const [apiBaseUrl, setApiBaseUrl] = useState("");
+
+  useEffect(() => {
+    // Get current domain from window location
+    if (typeof window !== "undefined") {
+      setApiBaseUrl(window.location.origin);
+    }
+  }, []);
+
   const apiExamples = [
     {
       endpoint: "/api/upload",
       method: "POST",
       description: "Upload PDF or DOCX file for text extraction",
-      curl: `curl -X POST https://api.privygate.com/api/upload \\
+      curl: `curl -X POST ${apiBaseUrl || "https://api.privygate.com"}/api/upload \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -F "file=@document.pdf"`,
       sampleResponse: {
@@ -220,7 +229,7 @@ export default function FilesPage() {
       endpoint: "/api/redact-file",
       method: "POST",
       description: "Redact PII from uploaded file",
-      curl: `curl -X POST https://api.privygate.com/api/redact-file \\
+      curl: `curl -X POST ${apiBaseUrl || "https://api.privygate.com"}/api/redact-file \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{

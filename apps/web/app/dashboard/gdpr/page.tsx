@@ -92,12 +92,21 @@ export default function GDPRAnalyzerPage() {
     }
   };
 
+  const [apiBaseUrl, setApiBaseUrl] = useState("");
+
+  useEffect(() => {
+    // Get current domain from window location
+    if (typeof window !== "undefined") {
+      setApiBaseUrl(window.location.origin);
+    }
+  }, []);
+
   const apiExamples = [
     {
       endpoint: "/api/gdpr/analyze",
       method: "POST",
       description: "Analyze a website for GDPR compliance with AI enhancement",
-      curl: `curl -X POST https://api.privygate.com/api/gdpr/analyze \\
+      curl: `curl -X POST ${apiBaseUrl || "https://api.privygate.com"}/api/gdpr/analyze \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{

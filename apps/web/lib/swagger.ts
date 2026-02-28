@@ -14,8 +14,8 @@ const options: swaggerJsdoc.Options = {
     },
     servers: [
       {
-        url: process.env.NEXTAUTH_URL || "https://api.privygate.com",
-        description: "Production API server",
+        url: process.env.NEXTAUTH_URL || process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000",
+        description: "API server",
       },
     ],
     components: {
@@ -24,8 +24,8 @@ const options: swaggerJsdoc.Options = {
           type: "oauth2",
           flows: {
             authorizationCode: {
-              authorizationUrl: `${process.env.NEXTAUTH_URL || "https://api.privygate.com"}/api/auth/oauth/authorize`,
-              tokenUrl: `${process.env.NEXTAUTH_URL || "https://api.privygate.com"}/api/auth/oauth/token`,
+              authorizationUrl: `${process.env.NEXTAUTH_URL || process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000"}/api/auth/oauth/authorize`,
+              tokenUrl: `${process.env.NEXTAUTH_URL || process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000"}/api/auth/oauth/token`,
               scopes: {
                 read: "Read access",
                 write: "Write access",
@@ -33,7 +33,7 @@ const options: swaggerJsdoc.Options = {
               },
             },
             clientCredentials: {
-              tokenUrl: `${process.env.NEXTAUTH_URL || "https://api.privygate.com"}/api/auth/oauth/token`,
+              tokenUrl: `${process.env.NEXTAUTH_URL || process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000"}/api/auth/oauth/token`,
               scopes: {
                 read: "Read access",
                 write: "Write access",
