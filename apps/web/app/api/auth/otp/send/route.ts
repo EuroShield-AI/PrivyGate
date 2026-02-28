@@ -53,10 +53,12 @@ export async function POST(request: NextRequest) {
     if (userResults.length === 0) {
       // Auto-create user for OTP login
       const { v4: uuidv4 } = await import("uuid");
+      const now = new Date();
       await db.insert(users).values({
         id: uuidv4(),
         email,
         role: "user",
+        updatedAt: now,
       });
     }
 

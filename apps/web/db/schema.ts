@@ -9,6 +9,7 @@ export const users = mysqlTable('users', {
   passwordHash: varchar('passwordHash', { length: 255 }),
   role: varchar('role', { length: 50 }).default('user'),
   createdAt: datetime('createdAt').default('CURRENT_TIMESTAMP'),
+  updatedAt: datetime('updatedAt').default('CURRENT_TIMESTAMP'),
 });
 
 // Account table (for NextAuth)
