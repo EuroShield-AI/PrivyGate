@@ -9,7 +9,6 @@ import { Breadcrumbs } from "@/components/breadcrumbs";
 import { Notification } from "@/components/notification";
 import { Key, Save, CheckCircle2, AlertCircle, TestTube, Copy } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Mistral } from "@mistralai/mistralai";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -87,18 +86,28 @@ export default function SettingsPage() {
     setNotification({ type, message });
   };
 
-  const testApiKey = async (apiKey: string): Promise<boolean> => {
+  const testApiKey = async (apiKey: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      const mistral = new Mistral({ apiKey });
-      const response = await mistral.chat.complete({
-        model: "mistral-tiny",
-        messages: [{ role: "user", content: "test" }],
-        maxTokens: 1,
+      const token = localStorage.getItem("token");
+      // Create a temporary test endpoint call
+      const response = await fetch("/api/settings/mistral-key/test", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ apiKey }),
       });
-      return !!(response.choices && response.choices.length > 0);
+
+      const data = await response.json();
+      if (response.ok) {
+        return { success: true };
+      } else {
+        return { success: false, error: data.error || "API key test failed" };
+      }
     } catch (error) {
       console.error("API key test failed:", error);
-      return false;
+      return { success: false, error: "Failed to test API key" };
     }
   };
 
@@ -110,12 +119,12 @@ export default function SettingsPage() {
 
     setLoading(true);
     try {
-      // First, test the API key
+      // First, test the API key via server endpoint
       showNotification("info", "Testing API key...");
-      const isValid = await testApiKey(mistralApiKey.trim());
+      const testResult = await testApiKey(mistralApiKey.trim());
       
-      if (!isValid) {
-        showNotification("error", "API key test failed. Please check your API key and try again.");
+      if (!testResult.success) {
+        showNotification("error", testResult.error || "API key test failed. Please check your API key and try again.");
         setLoading(false);
         return;
       }

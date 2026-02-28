@@ -24,10 +24,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const mistralApiKey = await getMistralApiKey(auth.user.id);
+    // Get API key from request body (for testing before saving) or from database
+    let mistralApiKey: string | null = null;
+    try {
+      const body = await request.json();
+      if (body.apiKey) {
+        mistralApiKey = body.apiKey;
+      }
+    } catch (e) {
+      // No body, try to get from database
+    }
+
+    if (!mistralApiKey) {
+      mistralApiKey = await getMistralApiKey(auth.user.id);
+    }
+
     if (!mistralApiKey) {
       return NextResponse.json(
-        { error: "Mistral API key not configured" },
+        { error: "Mistral API key not provided or configured" },
         { status: 400 }
       );
     }
