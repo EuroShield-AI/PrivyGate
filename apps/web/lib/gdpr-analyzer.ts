@@ -1,5 +1,5 @@
 import * as cheerio from "cheerio";
-import { Mistral } from "@mistralai/mistralai";
+import { crawlWebsite } from "./web-crawler";
 
 export interface GDPRFinding {
   type: "cookie" | "form" | "tracking" | "privacy_policy" | "consent" | "data_collection";
@@ -28,37 +28,54 @@ export async function analyzeWebsite(
   onStatusUpdate?: (status: string) => void
 ): Promise<GDPRReport> {
   try {
-    onStatusUpdate?.("Fetching website content...");
+    onStatusUpdate?.("Loading website (waiting for SPA content to load)...");
     
-    // Fetch with proper headers to get full content
-    const response = await fetch(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Connection": "keep-alive",
-        "Upgrade-Insecure-Requests": "1",
-      },
-      redirect: "follow",
-    });
+    let html: string;
+    let pageText: string;
+    let scriptContent: string;
+    let allText: string;
+    let detectedCookies: string[] = [];
+    
+    // Try using Puppeteer for SPA support, fallback to fetch
+    try {
+      const crawlResult = await crawlWebsite(url, true);
+      html = crawlResult.html;
+      pageText = crawlResult.text;
+      scriptContent = crawlResult.scripts;
+      allText = pageText + " " + scriptContent;
+      detectedCookies = crawlResult.cookies;
+      onStatusUpdate?.("Website loaded, analyzing content...");
+    } catch (puppeteerError) {
+      console.warn("Puppeteer failed, falling back to fetch:", puppeteerError);
+      onStatusUpdate?.("Fetching website content (basic mode)...");
+      
+      // Fallback to basic fetch
+      const response = await fetch(url, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+          "Accept-Language": "en-US,en;q=0.9",
+          "Connection": "keep-alive",
+        },
+        redirect: "follow",
+      });
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
+      }
+
+      html = await response.text();
+      const $ = cheerio.load(html);
+      pageText = $("body").text();
+      scriptContent = $("script").map((_, el) => $(el).html() || "").get().join(" ");
+      allText = pageText + " " + scriptContent;
     }
 
     onStatusUpdate?.("Parsing HTML content...");
-    const html = await response.text();
     const $ = cheerio.load(html);
     const findings: GDPRFinding[] = [];
     const findingsSet = new Set<string>(); // For deduplication
     let score = 100;
-    
-    // Extract full HTML and text content for comprehensive analysis
-    const fullHtml = $.html();
-    const pageText = $("body").text();
-    const scriptContent = $("script").map((_, el) => $(el).html() || "").get().join(" ");
-    const allText = pageText + " " + scriptContent;
     
     // Helper to add finding with deduplication
     const addFinding = (finding: GDPRFinding) => {
@@ -113,6 +130,9 @@ export async function analyzeWebsite(
     // Comprehensive cookie detection
     onStatusUpdate?.("Detecting cookies and consent mechanisms...");
     
+    // Check for actual cookies detected by browser
+    const hasActualCookies = detectedCookies.length > 0;
+    
     // Check for cookie-related elements in HTML
     const cookieSelectors = [
       '[class*="cookie"]',
@@ -129,6 +149,7 @@ export async function analyzeWebsite(
       '[id*="GDPR"]',
       '[data-cookie]',
       '[data-consent]',
+      '[data-gdpr]',
     ];
     
     let cookieElements: any[] = [];
@@ -143,7 +164,7 @@ export async function analyzeWebsite(
       }
     });
     
-    // Check for cookie-related text in content
+    // Check for cookie-related text in content (more comprehensive)
     const cookieTextPatterns = [
       /cookie\s+policy/i,
       /cookie\s+consent/i,
@@ -153,13 +174,19 @@ export async function analyzeWebsite(
       /cookie\s+settings/i,
       /gdpr\s+consent/i,
       /privacy\s+preferences/i,
+      /cookie\s+notice/i,
+      /cookie\s+popup/i,
+      /cookie\s+dialog/i,
+      /cookie\s+preferences/i,
     ];
     
     let cookieTextFound = false;
+    let cookieTextMatches: string[] = [];
     for (const pattern of cookieTextPatterns) {
-      if (pattern.test(allText)) {
+      const matches = allText.match(pattern);
+      if (matches) {
         cookieTextFound = true;
-        break;
+        cookieTextMatches.push(...matches);
       }
     }
     
@@ -173,9 +200,37 @@ export async function analyzeWebsite(
     const cookieMeta = $('meta[name*="cookie"], meta[property*="cookie"], meta[name*="Cookie"], meta[property*="Cookie"]');
     
     // Check for localStorage/sessionStorage cookie usage in scripts
-    const storageCookieUsage = /(localStorage|sessionStorage|cookie)/i.test(scriptContent);
+    const storageCookieUsage = /(localStorage|sessionStorage).*cookie|document\.cookie/i.test(scriptContent);
     
-    const hasCookieBanner = cookieElements.length > 0 || cookieTextFound || cookieScripts.length > 0 || cookieMeta.length > 0 || storageCookieUsage;
+    // Check for cookie consent libraries
+    const cookieLibraries = [
+      /cookiebot|Cookiebot/i,
+      /onetrust|OneTrust/i,
+      /cookieconsent|CookieConsent/i,
+      /cookie-law-info/i,
+      /gdpr-cookie/i,
+    ];
+    
+    let cookieLibraryFound = false;
+    for (const pattern of cookieLibraries) {
+      if (pattern.test(allText) || pattern.test(scriptContent)) {
+        cookieLibraryFound = true;
+        break;
+      }
+    }
+    
+    const hasCookieBanner = hasActualCookies || cookieElements.length > 0 || cookieTextFound || cookieScripts.length > 0 || cookieMeta.length > 0 || storageCookieUsage || cookieLibraryFound;
+    
+    // If cookies are detected but no banner, that's a problem
+    if (hasActualCookies && !cookieTextFound && cookieElements.length === 0 && !cookieLibraryFound) {
+      addFinding({
+        type: "cookie",
+        severity: "high",
+        description: `Cookies detected (${detectedCookies.length} cookies) but no cookie consent banner found`,
+        recommendation: "Implement a cookie consent banner before setting any cookies",
+      });
+      score -= 20;
+    }
     
     if (!hasCookieBanner) {
       addFinding({
@@ -338,14 +393,17 @@ export async function analyzeWebsite(
 3. Cookie consent mechanisms
 
 Website URL: ${url}
-HTML Content (first 20k chars): ${fullHtml.substring(0, 20000)}
-Text Content (first 15k chars): ${allText.substring(0, 15000)}
+Detected Cookies: ${detectedCookies.join(", ") || "None detected by browser"}
+HTML Content (first 25k chars): ${html.substring(0, 25000)}
+Text Content (first 20k chars): ${allText.substring(0, 20000)}
+Script Content (first 10k chars): ${scriptContent.substring(0, 10000)}
 
 Return JSON with:
 {
-  "cookiesDetected": ["list of cookies mentioned or used"],
+  "cookiesDetected": ["list of cookies mentioned, used, or set"],
   "cookiePolicy": "yes|no|partial",
   "cookieConsent": "yes|no|partial",
+  "cookieBannerPresent": "yes|no|partial",
   "personalDataFound": ["list of specific personal data types mentioned"],
   "dataProcessingActivities": ["list of data processing activities"],
   "thirdPartySharing": ["any third parties mentioned for data sharing"],
@@ -364,15 +422,34 @@ Return JSON with:
         
         // Add findings based on AI cookie detection
         if (piiData.cookiesDetected && piiData.cookiesDetected.length > 0) {
-          if (piiData.cookieConsent === "no" || piiData.cookieConsent === "partial") {
+          const cookieDescription = `AI detected ${piiData.cookiesDetected.length} cookie(s): ${piiData.cookiesDetected.slice(0, 5).join(", ")}${piiData.cookiesDetected.length > 5 ? "..." : ""}`;
+          
+          if (piiData.cookieConsent === "no") {
             addFinding({
               type: "cookie",
-              severity: piiData.cookieConsent === "no" ? "high" : "medium",
-              description: `AI detected cookie usage: ${piiData.cookiesDetected.join(", ")}. Cookie consent: ${piiData.cookieConsent}`,
+              severity: "high",
+              description: `${cookieDescription}. Cookie consent mechanism: Not found`,
               recommendation: "Implement proper cookie consent mechanism before setting cookies",
+              aiAnalysis: `Cookie policy: ${piiData.cookiePolicy || "Not found"}, Cookie banner: ${piiData.cookieBannerPresent || "Not found"}`,
+            });
+          } else if (piiData.cookieConsent === "partial") {
+            addFinding({
+              type: "cookie",
+              severity: "medium",
+              description: `${cookieDescription}. Cookie consent mechanism: Partial/incomplete`,
+              recommendation: "Ensure cookie consent mechanism covers all cookie types and has clear accept/decline options",
               aiAnalysis: `Cookie policy: ${piiData.cookiePolicy || "Not found"}`,
             });
           }
+        } else if (hasActualCookies && piiData.cookieConsent === "no") {
+          // Browser detected cookies but AI didn't find consent
+          addFinding({
+            type: "cookie",
+            severity: "high",
+            description: `Browser detected ${detectedCookies.length} cookie(s) but no consent mechanism found`,
+            recommendation: "Implement cookie consent banner before setting cookies",
+            aiAnalysis: "AI analysis confirms missing cookie consent",
+          });
         }
         
         // Add findings based on AI PII detection
