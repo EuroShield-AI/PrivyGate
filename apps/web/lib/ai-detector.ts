@@ -58,6 +58,10 @@ Return ONLY valid JSON in this format:
 
       const parsed = JSON.parse(content) as AIDetectionResult;
       
+      // Note: Token usage is available in response.usage but not tracked here
+      // as this is called during redaction, not processing. Token usage is tracked
+      // in /api/process for AI processing operations.
+      
       // Validate and find actual positions in text
       const entities: DetectedEntity[] = [];
       for (const entity of parsed.entities || []) {
