@@ -153,7 +153,9 @@ export default function DashboardLayout({
             {/* User & Logout */}
             <div className="flex items-center gap-3">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-medium text-slate-900">{user?.email || "User"}</p>
+                <p className="text-sm font-medium text-slate-900">
+                  {userName || user?.email || "User"}
+                </p>
                 <p className="text-xs text-slate-500">{user?.role || "user"}</p>
               </div>
               <Button variant="ghost" size="icon" onClick={handleLogout} title="Logout">
