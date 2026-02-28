@@ -171,7 +171,7 @@ export default function HomePage() {
               ) : (
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="otp">Enter 6-digit code</Label>
+                    <Label htmlFor="otp" className="block text-center">Enter 6-digit code</Label>
                     <div className="mt-2">
                       <OTPInput
                         value={otp}
