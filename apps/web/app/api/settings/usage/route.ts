@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
-import { db, jobs } from "@/lib/db";
-import { eq, sql } from "drizzle-orm";
+import { db, jobs, auditLogs } from "@/lib/db";
+import { eq, sql, and, gte } from "drizzle-orm";
 
 /**
  * @swagger
@@ -22,8 +22,50 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    // Get job statistics for the user
-    // Note: This is a simplified version. In production, you'd track actual token usage per API call
+    // Get user's jobs to find related audit logs
+    const userJobs = await db
+      .select({ id: jobs.id })
+      .from(jobs)
+      .where(eq(jobs.userId, auth.user.id));
+
+    const jobIds = userJobs.map(j => j.id);
+
+    // Get actual token usage from audit logs
+    let totalTokens = 0;
+    let recentTokens = 0;
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    if (jobIds.length > 0) {
+      // Get all audit logs with token usage for user's jobs
+      const auditLogsWithTokens = await db
+        .select()
+        .from(auditLogs)
+        .where(
+          and(
+            sql`${auditLogs.jobId} IN (${sql.join(jobIds.map(id => sql`${id}`), sql`, `)})`,
+            sql`JSON_EXTRACT(${auditLogs.metadata}, '$.totalTokens') IS NOT NULL`
+          )
+        );
+
+      // Sum up tokens from audit logs
+      for (const log of auditLogsWithTokens) {
+        try {
+          const metadata = JSON.parse(log.metadata as string);
+          const tokens = metadata.totalTokens || 0;
+          totalTokens += tokens;
+          
+          // Check if within last 30 days
+          if (new Date(log.timestamp) >= thirtyDaysAgo) {
+            recentTokens += tokens;
+          }
+        } catch (e) {
+          // Skip invalid JSON
+        }
+      }
+    }
+
+    // Get job statistics
     const jobStats = await db
       .select({
         totalJobs: sql<number>`COUNT(*)`.as('totalJobs'),
@@ -34,17 +76,17 @@ export async function GET(request: NextRequest) {
 
     const stats = jobStats[0] || { totalJobs: 0, recentJobs: 0 };
 
-    // For now, return estimated usage based on jobs
-    // In production, you'd track actual token usage from Mistral API responses
-    const estimatedTokens = stats.totalJobs * 1000; // Rough estimate: 1000 tokens per job
     const limit = 1000000; // Default limit
+    const model = "mistral-large-latest"; // Default model
 
     return NextResponse.json({
-      used: estimatedTokens,
+      used: totalTokens,
       limit,
-      model: "mistral-large-latest", // Default model
+      model,
       totalJobs: stats.totalJobs,
       recentJobs: stats.recentJobs,
+      totalTokensUsed: totalTokens, // Alias for clarity
+      tokenLimit: limit,
     });
   } catch (error) {
     console.error("Error fetching usage:", error);

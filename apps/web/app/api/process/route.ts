@@ -57,6 +57,10 @@ export async function POST(request: NextRequest) {
     let modelUsed = "mistral-large-latest";
     const redactedText = job.redactedText;
 
+    let totalTokens = 0;
+    let promptTokens = 0;
+    let completionTokens = 0;
+
     switch (taskType) {
       case "summarize": {
         const response = await mistral.chat.complete({
@@ -64,6 +68,12 @@ export async function POST(request: NextRequest) {
           messages: [{ role: "user", content: `Summarize the following text in 2-3 sentences:\n\n${redactedText}` }],
         });
         result = response.choices[0]?.message?.content || "";
+        // Extract token usage from response
+        if (response.usage) {
+          totalTokens = response.usage.totalTokens || 0;
+          promptTokens = response.usage.promptTokens || 0;
+          completionTokens = response.usage.completionTokens || 0;
+        }
         break;
       }
       case "classify": {
@@ -73,6 +83,12 @@ export async function POST(request: NextRequest) {
           responseFormat: { type: "json_object" },
         });
         result = JSON.parse(response.choices[0]?.message?.content || "{}");
+        // Extract token usage from response
+        if (response.usage) {
+          totalTokens = response.usage.totalTokens || 0;
+          promptTokens = response.usage.promptTokens || 0;
+          completionTokens = response.usage.completionTokens || 0;
+        }
         break;
       }
       case "extract-actions": {
@@ -82,15 +98,24 @@ export async function POST(request: NextRequest) {
           responseFormat: { type: "json_object" },
         });
         result = JSON.parse(response.choices[0]?.message?.content || "{}");
+        // Extract token usage from response
+        if (response.usage) {
+          totalTokens = response.usage.totalTokens || 0;
+          promptTokens = response.usage.promptTokens || 0;
+          completionTokens = response.usage.completionTokens || 0;
+        }
         break;
       }
     }
 
-    // Create audit log for processing completion
+    // Create audit log for processing completion with token usage
     await auditLogger.log(jobId, "PROCESSING_COMPLETED", {
       taskType,
       modelUsed,
       success: true,
+      totalTokens,
+      promptTokens,
+      completionTokens,
     });
 
     return NextResponse.json({

@@ -96,7 +96,10 @@ export default function DashboardLayout({
       });
       if (response.ok) {
         const data = await response.json();
-        setTokenUsage({ used: data.used || 0, limit: data.limit || 1000000 });
+        setTokenUsage({ 
+          used: data.used || data.totalTokensUsed || 0, 
+          limit: data.limit || data.tokenLimit || 1000000 
+        });
         setModel(data.model || "mistral-large-latest");
       }
     } catch (error) {
