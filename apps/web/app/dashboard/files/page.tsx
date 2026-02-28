@@ -282,7 +282,7 @@ export default function FilesPage() {
           </Button>
         </div>
 
-          {!fileResult ? (
+        {!fileResult ? (
             <Card className="border border-slate-200">
               <CardHeader>
                 <CardTitle>Drag & Drop File Upload</CardTitle>
