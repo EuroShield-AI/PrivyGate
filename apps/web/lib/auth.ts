@@ -1,5 +1,4 @@
 import { NextRequest } from "next/server";
-import { verify } from "next-auth/jwt";
 
 export async function getAuthToken(request: NextRequest): Promise<string | null> {
   const authHeader = request.headers.get("authorization");
