@@ -37,11 +37,13 @@ export async function GET(request: NextRequest) {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     if (jobIds.length > 0) {
-      // Get all audit logs and filter in JavaScript for simplicity
+      // Get all audit logs for user's jobs with PROCESSING_COMPLETED event
       const allAuditLogs = await db
         .select()
         .from(auditLogs)
-        .where(sql`${auditLogs.jobId} IS NOT NULL`);
+        .where(
+          sql`${auditLogs.jobId} IS NOT NULL AND ${auditLogs.eventType} = 'PROCESSING_COMPLETED'`
+        );
 
       // Filter and sum tokens
       for (const log of allAuditLogs) {
@@ -51,21 +53,30 @@ export async function GET(request: NextRequest) {
         }
 
         try {
-          const metadata = JSON.parse(log.metadata as string);
-          const tokens = metadata.totalTokens || 0;
+          const metadata = typeof log.metadata === 'string' ? JSON.parse(log.metadata) : log.metadata;
+          const tokens = metadata?.totalTokens || 0;
           if (typeof tokens === 'number' && tokens > 0) {
             totalTokens += tokens;
             
             // Check if within last 30 days
-            if (new Date(log.timestamp) >= thirtyDaysAgo) {
+            const logDate = new Date(log.timestamp);
+            if (logDate >= thirtyDaysAgo) {
               recentTokens += tokens;
             }
           }
         } catch (e) {
+          console.error("Error parsing audit log metadata:", e, log);
           // Skip invalid JSON
         }
       }
     }
+    
+    // Debug logging
+    console.log("Token usage query:", {
+      userId: auth.user.id,
+      jobIds: jobIds.length,
+      totalTokens,
+    });
 
     // Get job statistics
     const jobStats = await db

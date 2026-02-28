@@ -229,17 +229,6 @@ export default function DashboardLayout({
               <span>GDPR Analyzer</span>
             </Link>
             <Link
-              href="/dashboard/analytics"
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                pathname === "/dashboard/analytics"
-                  ? "bg-blue-50 text-blue-700 font-medium"
-                  : "text-slate-700 hover:bg-slate-100"
-              }`}
-            >
-              <BarChart3 className="h-5 w-5" />
-              <span>Analytics</span>
-            </Link>
-            <Link
               href="/dashboard/settings"
               className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
                 pathname === "/dashboard/settings"

@@ -47,16 +47,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create job
-    const jobId = uuidv4();
-    await db.insert(jobs).values({
-      id: jobId,
-      type: "redaction",
-      retentionMode: retentionMode || "standard",
-      status: "processing",
-      originalText: file.extractedText,
-      fileId: file.id,
-    });
+        // Create job
+        const jobId = uuidv4();
+        await db.insert(jobs).values({
+          id: jobId,
+          type: "redaction",
+          retentionMode: retentionMode || "standard",
+          status: "processing",
+          originalText: file.extractedText,
+          fileId: file.id,
+          userId: auth.user.id,
+        });
 
     // Get user's Mistral API key for AI detection
     const mistralApiKey = await getMistralApiKey(auth.user.id);

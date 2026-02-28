@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
       status: "processing",
       originalText: text,
       retentionMode: retentionMode || "standard",
+      userId: auth.user.id,
     });
 
     // Get user's Mistral API key for AI detection
