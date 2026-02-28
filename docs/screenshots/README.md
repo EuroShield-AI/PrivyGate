@@ -2,7 +2,7 @@
 
 Add application screenshots here:
 
-- dashboard.png - Main dashboard overview
+- dashboard.png - Homepage with login options and feature overview
 - text-processing.png - Text processing interface
 - file-processing.png - File processing workflow
 - gdpr-analyzer.png - GDPR analyzer tool

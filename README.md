@@ -134,9 +134,9 @@ This architecture ensures sensitive data is **never unnecessarily exposed** to A
 
 <div align="center">
 
-### Dashboard Overview
-![Dashboard](./docs/screenshots/dashboard.png)
-*Main dashboard with dark theme and sidebar navigation*
+### Homepage
+![Homepage](./docs/screenshots/dashboard.png)
+*Homepage with login options and feature overview*
 
 ### Text Processing
 ![Text Processing](./docs/screenshots/text-processing.png)
