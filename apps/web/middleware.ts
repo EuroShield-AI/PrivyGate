@@ -1,7 +1,25 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { checkRateLimit } from "./lib/rate-limit";
-import { logger } from "./lib/logger";
+
+// Use dynamic imports for edge runtime compatibility
+async function checkRateLimit(identifier: string) {
+  try {
+    const { checkRateLimit: check } = await import("./lib/rate-limit");
+    return check(identifier);
+  } catch (error) {
+    // Fallback if rate limiting fails
+    return { success: true, limit: 100, remaining: 99, reset: Date.now() + 3600000 };
+  }
+}
+
+async function logWarning(message: string, metadata?: Record<string, unknown>) {
+  try {
+    const { logger } = await import("./lib/logger");
+    logger.warn(message, metadata);
+  } catch (error) {
+    console.warn(message, metadata);
+  }
+}
 
 export async function middleware(request: NextRequest) {
   // Skip rate limiting for static files and API health checks
@@ -33,7 +51,7 @@ export async function middleware(request: NextRequest) {
       response.headers.set("X-RateLimit-Reset", reset.toString());
 
       if (!success) {
-        logger.warn("Rate limit exceeded", {
+        await logWarning("Rate limit exceeded", {
           identifier,
           path: request.nextUrl.pathname,
         });
@@ -41,7 +59,7 @@ export async function middleware(request: NextRequest) {
 
       return response;
     } catch (error) {
-      logger.error("Rate limit check failed", error as Error);
+      console.error("Rate limit check failed", error);
       // Allow request if rate limiting fails
       return NextResponse.next();
     }
