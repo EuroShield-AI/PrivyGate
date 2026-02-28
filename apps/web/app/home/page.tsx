@@ -101,7 +101,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-white">
       {notification && (
         <div className="fixed top-20 right-4 z-50 w-96">
           <Notification
@@ -133,34 +133,31 @@ export default function HomePage() {
       </header>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-20">
+      <section className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl font-bold text-slate-900 mb-6">
+          <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4 leading-tight tracking-tight">
             Privacy-by-Design AI Infrastructure
             <br />
             <span className="text-blue-600">for European Organizations</span>
           </h1>
-          <p className="text-xl text-slate-600 mb-8 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-slate-600 mb-6 max-w-2xl mx-auto leading-relaxed">
             Safely adopt LLM workflows without exposing personal data or violating GDPR principles. 
             PrivyGate acts as a secure privacy layer between your sensitive data and AI systems.
           </p>
-          <div className="flex flex-wrap justify-center gap-4 mb-8">
-            <div className="px-4 py-2 bg-blue-50 rounded-full text-sm font-medium text-blue-700">
+          <div className="flex flex-wrap justify-center gap-3 mb-8">
+            <div className="px-3 py-1.5 bg-slate-100 rounded-full text-sm font-medium text-slate-700">
               GDPR Compliant
             </div>
-            <div className="px-4 py-2 bg-green-50 rounded-full text-sm font-medium text-green-700">
+            <div className="px-3 py-1.5 bg-blue-50 rounded-full text-sm font-medium text-blue-700">
               AI-Powered Processing
             </div>
-            <div className="px-4 py-2 bg-purple-50 rounded-full text-sm font-medium text-purple-700">
+            <div className="px-3 py-1.5 bg-slate-100 rounded-full text-sm font-medium text-slate-700">
               Complete Audit Trails
-            </div>
-            <div className="px-4 py-2 bg-orange-50 rounded-full text-sm font-medium text-orange-700">
-              Open Source
             </div>
           </div>
           
           {/* Login Card */}
-          <Card className="max-w-md mx-auto mb-12">
+          <Card className="max-w-md mx-auto mb-8">
             <CardHeader>
               <CardTitle>Get Started</CardTitle>
               <CardDescription>Sign in with your email</CardDescription>
@@ -214,24 +211,24 @@ export default function HomePage() {
       </section>
 
       {/* Core Features Section */}
-      <section className="container mx-auto px-4 py-20">
+      <section className="container mx-auto px-4 py-12">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-4">Core Features</h2>
-          <p className="text-center text-slate-600 mb-12 max-w-2xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-3 text-slate-900">Core Features</h2>
+          <p className="text-center text-slate-600 mb-8 max-w-2xl mx-auto leading-relaxed">
             Everything you need to process sensitive data safely with AI while maintaining full GDPR compliance
           </p>
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="border-2 hover:border-blue-500 transition-colors">
+          <div className="grid md:grid-cols-3 gap-6">
+            <Card className="border hover:border-blue-500 transition-colors">
               <CardHeader>
-                <Zap className="h-10 w-10 text-blue-600 mb-4" />
-                <CardTitle>Text Processing</CardTitle>
+                <Zap className="h-8 w-8 text-blue-600 mb-3" />
+                <CardTitle className="text-lg">Text Processing</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-600 mb-4">
+                <p className="text-slate-600 mb-3 text-sm leading-relaxed">
                   Detect and redact PII from text using rule-based and AI-powered detection. 
                   Process redacted content with Mistral AI for summarization, classification, and action extraction.
                 </p>
-                <ul className="text-sm text-slate-600 space-y-1">
+                <ul className="text-xs text-slate-600 space-y-1 leading-relaxed">
                   <li>• Automatic PII detection (emails, phones, IBANs, names)</li>
                   <li>• Reversible pseudonymization</li>
                   <li>• AI processing with 12+ Mistral models</li>
@@ -240,17 +237,17 @@ export default function HomePage() {
               </CardContent>
             </Card>
 
-            <Card className="border-2 hover:border-green-500 transition-colors">
+            <Card className="border hover:border-blue-500 transition-colors">
               <CardHeader>
-                <FileText className="h-10 w-10 text-green-600 mb-4" />
-                <CardTitle>File Upload & Processing</CardTitle>
+                <FileText className="h-8 w-8 text-blue-600 mb-3" />
+                <CardTitle className="text-lg">File Processing</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-600 mb-4">
+                <p className="text-slate-600 mb-3 text-sm leading-relaxed">
                   Upload PDF and DOCX files for automatic text extraction and processing. 
                   Large files are automatically chunked and stored in vector database for efficient AI processing.
                 </p>
-                <ul className="text-sm text-slate-600 space-y-1">
+                <ul className="text-xs text-slate-600 space-y-1 leading-relaxed">
                   <li>• PDF and DOCX support</li>
                   <li>• Automatic chunking for large files</li>
                   <li>• Vector database integration (ChromaDB)</li>
@@ -259,17 +256,17 @@ export default function HomePage() {
               </CardContent>
             </Card>
 
-            <Card className="border-2 hover:border-purple-500 transition-colors">
+            <Card className="border hover:border-blue-500 transition-colors">
               <CardHeader>
-                <Globe className="h-10 w-10 text-purple-600 mb-4" />
-                <CardTitle>GDPR Website Analyzer</CardTitle>
+                <Globe className="h-8 w-8 text-blue-600 mb-3" />
+                <CardTitle className="text-lg">GDPR Website Analyzer</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-600 mb-4">
+                <p className="text-slate-600 mb-3 text-sm leading-relaxed">
                   Automated website scanning for GDPR compliance. Detects cookies, privacy policies, 
                   consent mechanisms, and provides AI-powered compliance scoring.
                 </p>
-                <ul className="text-sm text-slate-600 space-y-1">
+                <ul className="text-xs text-slate-600 space-y-1 leading-relaxed">
                   <li>• Automated website crawling</li>
                   <li>• Cookie and consent detection</li>
                   <li>• Privacy policy verification</li>
@@ -282,21 +279,21 @@ export default function HomePage() {
       </section>
 
       {/* Why PrivyGate Section */}
-      <section className="bg-white py-20">
+      <section className="bg-slate-50 py-12">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-4">Why PrivyGate?</h2>
-            <p className="text-center text-slate-600 mb-12 max-w-2xl mx-auto">
+            <h2 className="text-3xl font-bold text-center mb-3 text-slate-900">Why PrivyGate?</h2>
+            <p className="text-center text-slate-600 mb-8 max-w-2xl mx-auto leading-relaxed">
               European organizations face a major blocker when adopting AI: How can we use LLMs without exposing personal data or violating GDPR principles?
             </p>
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <Shield className="h-10 w-10 text-blue-600 mb-4" />
-                  <CardTitle>GDPR-First Architecture</CardTitle>
+                  <Shield className="h-8 w-8 text-blue-600 mb-3" />
+                  <CardTitle className="text-lg">GDPR-First Architecture</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-slate-600">
+                  <p className="text-slate-600 text-sm leading-relaxed">
                     Built from the ground up with privacy-by-design principles. Every feature enforces 
                     data minimization, pseudonymization, and complete auditability for regulatory compliance.
                   </p>
@@ -305,11 +302,11 @@ export default function HomePage() {
 
               <Card>
                 <CardHeader>
-                  <Database className="h-10 w-10 text-green-600 mb-4" />
-                  <CardTitle>Model Selection</CardTitle>
+                  <Database className="h-8 w-8 text-blue-600 mb-3" />
+                  <CardTitle className="text-lg">Model Selection</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-slate-600">
+                  <p className="text-slate-600 text-sm leading-relaxed">
                     Choose from 12+ Mistral AI models including Mistral Large 3, Ministral variants, 
                     Magistral reasoning models, and Pixtral for multimodal processing.
                   </p>
@@ -318,11 +315,11 @@ export default function HomePage() {
 
               <Card>
                 <CardHeader>
-                  <Code className="h-10 w-10 text-purple-600 mb-4" />
-                  <CardTitle>API-First Design</CardTitle>
+                  <Code className="h-8 w-8 text-blue-600 mb-3" />
+                  <CardTitle className="text-lg">API-First Design</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-slate-600">
+                  <p className="text-slate-600 text-sm leading-relaxed">
                     RESTful API with full OpenAPI/Swagger documentation. Designed for integration with 
                     ERP, CRM, helpdesk systems, and internal tooling. OAuth2 authentication support.
                   </p>
@@ -331,11 +328,11 @@ export default function HomePage() {
 
               <Card>
                 <CardHeader>
-                  <BarChart3 className="h-10 w-10 text-orange-600 mb-4" />
-                  <CardTitle>Complete Audit Trails</CardTitle>
+                  <BarChart3 className="h-8 w-8 text-blue-600 mb-3" />
+                  <CardTitle className="text-lg">Complete Audit Trails</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-slate-600">
+                  <p className="text-slate-600 text-sm leading-relaxed">
                     Every operation is logged with full context. Export RoPA-compatible CSV reports 
                     for compliance documentation. Track token usage and processing history.
                   </p>
@@ -347,69 +344,69 @@ export default function HomePage() {
       </section>
 
       {/* Security & Compliance Details */}
-      <section className="bg-slate-50 py-20">
+      <section className="bg-white py-12">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-4">Security & Compliance</h2>
-            <p className="text-center text-slate-600 mb-12 max-w-2xl mx-auto">
+            <h2 className="text-3xl font-bold text-center mb-3 text-slate-900">Security & Compliance</h2>
+            <p className="text-center text-slate-600 mb-8 max-w-2xl mx-auto leading-relaxed">
               Enterprise-grade security with GDPR compliance built into every feature
             </p>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="flex items-start gap-4 bg-white p-6 rounded-lg">
-                <CheckCircle2 className="h-6 w-6 text-green-600 mt-1 flex-shrink-0" />
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="flex items-start gap-3 bg-slate-50 p-5 rounded-lg border border-slate-200">
+                <CheckCircle2 className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold mb-2">Data Minimization</h3>
-                  <p className="text-slate-600 text-sm">
+                  <h3 className="font-semibold mb-1.5 text-slate-900">Data Minimization</h3>
+                  <p className="text-slate-600 text-sm leading-relaxed">
                     Only process the minimum data necessary for your use case. 
                     Automatic detection and redaction of unnecessary PII before AI processing.
                   </p>
                 </div>
               </div>
-              <div className="flex items-start gap-4 bg-white p-6 rounded-lg">
-                <CheckCircle2 className="h-6 w-6 text-green-600 mt-1 flex-shrink-0" />
+              <div className="flex items-start gap-3 bg-slate-50 p-5 rounded-lg border border-slate-200">
+                <CheckCircle2 className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold mb-2">Reversible Pseudonymization</h3>
-                  <p className="text-slate-600 text-sm">
+                  <h3 className="font-semibold mb-1.5 text-slate-900">Reversible Pseudonymization</h3>
+                  <p className="text-slate-600 text-sm leading-relaxed">
                     Replace sensitive data with tokens (EMAIL_1, PHONE_2) that can be reversed when needed, 
                     maintaining data utility while protecting privacy.
                   </p>
                 </div>
               </div>
-              <div className="flex items-start gap-4 bg-white p-6 rounded-lg">
-                <CheckCircle2 className="h-6 w-6 text-green-600 mt-1 flex-shrink-0" />
+              <div className="flex items-start gap-3 bg-slate-50 p-5 rounded-lg border border-slate-200">
+                <CheckCircle2 className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold mb-2">AES-256-GCM Encryption</h3>
-                  <p className="text-slate-600 text-sm">
+                  <h3 className="font-semibold mb-1.5 text-slate-900">AES-256-GCM Encryption</h3>
+                  <p className="text-slate-600 text-sm leading-relaxed">
                     All sensitive data encrypted at rest. User API keys stored encrypted in database. 
                     Secure vault for pseudonymization mappings.
                   </p>
                 </div>
               </div>
-              <div className="flex items-start gap-4 bg-white p-6 rounded-lg">
-                <CheckCircle2 className="h-6 w-6 text-green-600 mt-1 flex-shrink-0" />
+              <div className="flex items-start gap-3 bg-slate-50 p-5 rounded-lg border border-slate-200">
+                <CheckCircle2 className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold mb-2">Complete Audit Trails</h3>
-                  <p className="text-slate-600 text-sm">
+                  <h3 className="font-semibold mb-1.5 text-slate-900">Complete Audit Trails</h3>
+                  <p className="text-slate-600 text-sm leading-relaxed">
                     Every action logged with full context. Export RoPA-compatible CSV reports 
                     for compliance documentation. Track all processing operations.
                   </p>
                 </div>
               </div>
-              <div className="flex items-start gap-4 bg-white p-6 rounded-lg">
-                <CheckCircle2 className="h-6 w-6 text-green-600 mt-1 flex-shrink-0" />
+              <div className="flex items-start gap-3 bg-slate-50 p-5 rounded-lg border border-slate-200">
+                <CheckCircle2 className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold mb-2">Zero-Retention Mode</h3>
-                  <p className="text-slate-600 text-sm">
+                  <h3 className="font-semibold mb-1.5 text-slate-900">Zero-Retention Mode</h3>
+                  <p className="text-slate-600 text-sm leading-relaxed">
                     Optional mode where sensitive data is never stored, 
                     processed in-memory only for maximum privacy.
                   </p>
                 </div>
               </div>
-              <div className="flex items-start gap-4 bg-white p-6 rounded-lg">
-                <CheckCircle2 className="h-6 w-6 text-green-600 mt-1 flex-shrink-0" />
+              <div className="flex items-start gap-3 bg-slate-50 p-5 rounded-lg border border-slate-200">
+                <CheckCircle2 className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold mb-2">User-Specific API Keys</h3>
-                  <p className="text-slate-600 text-sm">
+                  <h3 className="font-semibold mb-1.5 text-slate-900">User-Specific API Keys</h3>
+                  <p className="text-slate-600 text-sm leading-relaxed">
                     Each user can configure their own Mistral API key, stored encrypted. 
                     Test connection before saving. Full control over AI model selection.
                   </p>
@@ -421,32 +418,32 @@ export default function HomePage() {
       </section>
 
       {/* Importance Section */}
-      <section className="container mx-auto px-4 py-20">
+      <section className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 md:p-12 text-white">
-            <h2 className="text-3xl font-bold mb-4">Why This Matters</h2>
-            <p className="text-lg mb-6 text-white/90">
+          <div className="bg-blue-600 rounded-lg p-8 md:p-10 text-white">
+            <h2 className="text-2xl md:text-3xl font-bold mb-3 leading-tight">Why This Matters</h2>
+            <p className="text-base md:text-lg mb-5 text-white/90 leading-relaxed">
               European organizations are increasingly adopting AI, but face significant challenges:
             </p>
-            <ul className="space-y-3 mb-8">
+            <ul className="space-y-2.5 mb-6">
               <li className="flex items-start gap-3">
-                <CheckCircle2 className="h-5 w-5 mt-1 flex-shrink-0" />
-                <span><strong>GDPR Compliance:</strong> Processing personal data with AI requires strict compliance with data protection regulations</span>
+                <CheckCircle2 className="h-4 w-4 mt-1 flex-shrink-0" />
+                <span className="text-sm leading-relaxed"><strong>GDPR Compliance:</strong> Processing personal data with AI requires strict compliance with data protection regulations</span>
               </li>
               <li className="flex items-start gap-3">
-                <CheckCircle2 className="h-5 w-5 mt-1 flex-shrink-0" />
-                <span><strong>Data Minimization:</strong> Only necessary data should be processed, requiring automatic PII detection and redaction</span>
+                <CheckCircle2 className="h-4 w-4 mt-1 flex-shrink-0" />
+                <span className="text-sm leading-relaxed"><strong>Data Minimization:</strong> Only necessary data should be processed, requiring automatic PII detection and redaction</span>
               </li>
               <li className="flex items-start gap-3">
-                <CheckCircle2 className="h-5 w-5 mt-1 flex-shrink-0" />
-                <span><strong>Auditability:</strong> Complete audit trails are essential for demonstrating compliance to regulators</span>
+                <CheckCircle2 className="h-4 w-4 mt-1 flex-shrink-0" />
+                <span className="text-sm leading-relaxed"><strong>Auditability:</strong> Complete audit trails are essential for demonstrating compliance to regulators</span>
               </li>
               <li className="flex items-start gap-3">
-                <CheckCircle2 className="h-5 w-5 mt-1 flex-shrink-0" />
-                <span><strong>Privacy-by-Design:</strong> Privacy must be built into the system architecture, not added as an afterthought</span>
+                <CheckCircle2 className="h-4 w-4 mt-1 flex-shrink-0" />
+                <span className="text-sm leading-relaxed"><strong>Privacy-by-Design:</strong> Privacy must be built into the system architecture, not added as an afterthought</span>
               </li>
             </ul>
-            <p className="text-lg font-medium mb-6">
+            <p className="text-base font-medium mb-5 leading-relaxed">
               PrivyGate solves these challenges by providing a privacy-first gateway that enables safe AI adoption while maintaining full compliance.
             </p>
             {isLoggedIn ? (
@@ -465,8 +462,8 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t bg-white py-8">
-        <div className="container mx-auto px-4 text-center text-slate-600">
+      <footer className="border-t bg-white py-6">
+        <div className="container mx-auto px-4 text-center text-slate-600 text-sm">
           <p>&copy; 2026 PrivyGate. Built for privacy and compliance.</p>
         </div>
       </footer>
