@@ -40,7 +40,12 @@ export async function POST(request: NextRequest) {
     const { email } = sendOTPSchema.parse(body);
 
     // Check if user exists, if not create one
-    const userResults = await db.select()
+    const userResults = await db.select({
+      id: users.id,
+      email: users.email,
+      name: users.name,
+      role: users.role,
+    })
       .from(users)
       .where(eq(users.email, email))
       .limit(1);

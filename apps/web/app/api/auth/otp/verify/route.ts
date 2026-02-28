@@ -53,7 +53,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user
-    const userResults = await db.select()
+    const userResults = await db.select({
+      id: users.id,
+      email: users.email,
+      name: users.name,
+      role: users.role,
+    })
       .from(users)
       .where(eq(users.email, email))
       .limit(1);

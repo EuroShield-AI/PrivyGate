@@ -18,7 +18,13 @@ const handler = NextAuth({
           return null;
         }
 
-        const userResults = await db.select()
+        const userResults = await db.select({
+          id: users.id,
+          email: users.email,
+          name: users.name,
+          passwordHash: users.passwordHash,
+          role: users.role,
+        })
           .from(users)
           .where(eq(users.email, credentials.email))
           .limit(1);
