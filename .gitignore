@@ -63,3 +63,9 @@ storage/
 
 # Mistral specific
 mistral/
+
+# Task management files
+.taskmaster/
+*.taskmaster
+tasks.json
+.taskmaster.json

@@ -168,32 +168,65 @@ ENCRYPTION_SECRET=
 
 ## Local Development
 
-Install dependencies:
+### Prerequisites
+
+- Node.js 20+
+- MySQL 8.0+
+- Mistral API key
+
+### Setup
+
+1. Install dependencies:
 ```bash
 npm install
 ```
 
-Run development server:
+2. Set up environment variables in `apps/web/.env`:
+```bash
+DATABASE_URL="mysql://user:password@localhost:3306/privygate"
+MISTRAL_API_KEY="your-mistral-api-key"
+ENCRYPTION_SECRET="your-32-character-encryption-secret-key"
+```
+
+3. Generate Prisma Client:
+```bash
+cd apps/web
+npm run db:generate
+```
+
+4. Run database migrations:
+```bash
+npm run db:migrate
+```
+
+5. Start development server:
 ```bash
 npm run dev
 ```
 
-Run Prisma migrations:
+The app will be available at `http://localhost:3000`
+
+### Docker Setup
+
+Alternatively, use Docker Compose:
+
 ```bash
-npx prisma migrate dev
+docker-compose up -d
 ```
+
+This will start MySQL and the application. Make sure to set `MISTRAL_API_KEY` and `ENCRYPTION_SECRET` in your environment or `.env` file.
 
 ## Roadmap
 
-- [ ] Core PII detection engine
-- [ ] Pseudonymization vault
-- [ ] Structured output enforcement
+- [x] Core PII detection engine
+- [x] Pseudonymization vault
+- [x] Structured output enforcement
+- [x] Audit logging system
+- [x] RoPA export
 - [ ] PDF OCR integration
-- [ ] Audit logging system
-- [ ] RoPA export
 - [ ] DPIA draft generator
 - [ ] Role-based access control
-- [ ] Deployment configuration
+- [ ] Enhanced deployment configuration
 
 
 ## Hackathon Goal
