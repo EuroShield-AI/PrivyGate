@@ -50,10 +50,26 @@ export async function POST(request: NextRequest) {
 
     // Get user's Mistral API key for AI analysis
     const mistralApiKey = await getMistralApiKey(auth.user.id);
+    
+    if (!mistralApiKey) {
+      return NextResponse.json(
+        { error: "Mistral API key not configured. Please set it in Settings to enable comprehensive GDPR analysis." },
+        { status: 400 }
+      );
+    }
 
-    const report = await analyzeWebsite(url, mistralApiKey || undefined);
+    // Create a status update callback for real-time updates
+    const statusUpdates: string[] = [];
+    const onStatusUpdate = (status: string) => {
+      statusUpdates.push(status);
+    };
 
-    return NextResponse.json(report);
+    const report = await analyzeWebsite(url, mistralApiKey, onStatusUpdate);
+
+    return NextResponse.json({
+      ...report,
+      scanningStatus: statusUpdates[statusUpdates.length - 1] || "Complete",
+    });
   } catch (error) {
     console.error("GDPR analysis error:", error);
     return NextResponse.json(
