@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db, files, jobs, detectedEntities } from "@/lib/db";
 import { PIIDetector, PseudonymizationVault } from "@/lib/privacy-engine";
+import { AIPIIDetector } from "@/lib/ai-detector";
 import { encrypt } from "@/lib/encryption";
 import { AuditLogger } from "@/lib/audit";
+import { requireAuth } from "@/lib/auth";
+import { getMistralApiKey } from "@/lib/mistral-config";
 import { eq } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 
@@ -14,6 +17,11 @@ const redactFileSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAuth(request);
+    if ("error" in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
     const body = await request.json();
     const { fileId, retentionMode } = redactFileSchema.parse(body);
 
@@ -50,9 +58,32 @@ export async function POST(request: NextRequest) {
       fileId: file.id,
     });
 
-    // Detect PII
-    const detector = new PIIDetector();
-    const entities = detector.detect(file.extractedText);
+    // Get user's Mistral API key for AI detection
+    const mistralApiKey = await getMistralApiKey(auth.user.id);
+    
+    // Detect PII using AI if API key is available, otherwise fallback to regex
+    let entities;
+    if (mistralApiKey) {
+      try {
+        const aiDetector = new AIPIIDetector(mistralApiKey);
+        entities = await aiDetector.detect(file.extractedText);
+        
+        // If AI detection finds nothing or fails, fallback to regex
+        if (entities.length === 0) {
+          const regexDetector = new PIIDetector();
+          entities = regexDetector.detect(file.extractedText);
+        }
+      } catch (error) {
+        console.error("AI detection failed, falling back to regex:", error);
+        // Fallback to regex detection
+        const regexDetector = new PIIDetector();
+        entities = regexDetector.detect(file.extractedText);
+      }
+    } else {
+      // Use regex detection if no API key
+      const regexDetector = new PIIDetector();
+      entities = regexDetector.detect(file.extractedText);
+    }
 
     // Pseudonymize
     const vault = new PseudonymizationVault();
@@ -93,6 +124,7 @@ export async function POST(request: NextRequest) {
       entityCount: entities.length,
       fileId: file.id,
       filename: file.originalName,
+      detectionMethod: mistralApiKey ? "ai" : "regex",
     });
 
     return NextResponse.json({
