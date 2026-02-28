@@ -8,6 +8,7 @@
 - MySQL 8.0+
 - ChromaDB (optional, for large file processing)
 - Upstash Redis (optional, for rate limiting)
+- SMTP server for email OTP delivery
 
 ### Environment Variables
 
@@ -17,8 +18,8 @@ Required variables for production:
 # Database
 DATABASE_URL="mysql://user:password@host:3306/privygate"
 
-# Mistral AI
-MISTRAL_API_KEY="your-mistral-api-key"
+# Mistral AI (optional - can be set per-user in Settings)
+MISTRAL_API_KEY=""
 
 # Encryption (CRITICAL: Never change after data is encrypted)
 ENCRYPTION_SECRET="your-32-character-secret"
@@ -33,6 +34,13 @@ UPSTASH_REDIS_REST_TOKEN="your-redis-token"
 
 # Optional: Vector Database
 CHROMA_URL="http://chromadb:8000"
+
+# Email configuration (for OTP)
+SMTP_HOST="smtp.example.com"
+SMTP_PORT="587"
+SMTP_USER="user@example.com"
+SMTP_PASSWORD="password"
+SMTP_FROM="noreply@privygate.com"
 ```
 
 ### Docker Deployment
@@ -50,9 +58,13 @@ cd PrivyGate
 docker-compose up -d
 ```
 
-4. Run migrations:
+4. Run database setup:
 ```bash
-docker-compose exec app npx prisma migrate deploy
+# Run migration script to add selectedModel column
+docker-compose exec app node scripts/add-selected-model.js
+
+# Or use Drizzle Kit
+docker-compose exec app npm run db:push
 ```
 
 ### Manual Deployment
