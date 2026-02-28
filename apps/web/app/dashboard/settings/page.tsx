@@ -9,6 +9,7 @@ import { Breadcrumbs } from "@/components/breadcrumbs";
 import { Notification } from "@/components/notification";
 import { Key, Save, CheckCircle2, AlertCircle, TestTube, Copy } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Mistral } from "@mistralai/mistralai";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -88,7 +89,7 @@ export default function SettingsPage() {
 
   const testApiKey = async (apiKey: string): Promise<boolean> => {
     try {
-      const mistral = new (await import("@mistralai/mistralai")).Mistral({ apiKey });
+      const mistral = new Mistral({ apiKey });
       const response = await mistral.chat.complete({
         model: "mistral-tiny",
         messages: [{ role: "user", content: "test" }],
