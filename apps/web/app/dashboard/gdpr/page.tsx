@@ -51,7 +51,19 @@ export default function GDPRAnalyzerPage() {
     try {
       const token = localStorage.getItem("token");
       
-      // Use Server-Sent Events or polling for status updates
+      // Simulate status updates during analysis
+      const statusInterval = setInterval(() => {
+        const statuses = [
+          "Fetching website content...",
+          "Parsing HTML structure...",
+          "Detecting privacy elements...",
+          "Analyzing compliance...",
+          "Running AI analysis...",
+        ];
+        const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+        setScanningStatus(randomStatus);
+      }, 1000);
+
       const response = await fetch("/api/gdpr/analyze", {
         method: "POST",
         headers: {
@@ -60,6 +72,8 @@ export default function GDPRAnalyzerPage() {
         },
         body: JSON.stringify({ url: gdprUrl }),
       });
+
+      clearInterval(statusInterval);
       
       if (!response.ok) {
         const error = await response.json();
