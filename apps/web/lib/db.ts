@@ -1,5 +1,12 @@
 import { PrismaClient } from "@prisma/client";
 
+// Ensure Prisma client is available
+if (typeof PrismaClient === "undefined") {
+  throw new Error(
+    "@prisma/client did not initialize yet. Please run 'npm run db:generate' or 'npx prisma generate'"
+  );
+}
+
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
