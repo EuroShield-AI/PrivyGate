@@ -17,6 +17,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [testing, setTesting] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [updatingKey, setUpdatingKey] = useState(false);
   const [notification, setNotification] = useState<{ type: "success" | "error" | "info" | "warning"; message: string } | null>(null);
   const [user, setUser] = useState<any>(null);
   const [name, setName] = useState("");
@@ -85,6 +86,21 @@ export default function SettingsPage() {
     setNotification({ type, message });
   };
 
+  const testApiKey = async (apiKey: string): Promise<boolean> => {
+    try {
+      const mistral = new (await import("@mistralai/mistralai")).Mistral({ apiKey });
+      const response = await mistral.chat.complete({
+        model: "mistral-tiny",
+        messages: [{ role: "user", content: "test" }],
+        maxTokens: 1,
+      });
+      return !!(response.choices && response.choices.length > 0);
+    } catch (error) {
+      console.error("API key test failed:", error);
+      return false;
+    }
+  };
+
   const handleSaveMistralKey = async () => {
     if (!mistralApiKey.trim()) {
       showNotification("warning", "Please enter your Mistral API key");
@@ -93,6 +109,17 @@ export default function SettingsPage() {
 
     setLoading(true);
     try {
+      // First, test the API key
+      showNotification("info", "Testing API key...");
+      const isValid = await testApiKey(mistralApiKey.trim());
+      
+      if (!isValid) {
+        showNotification("error", "API key test failed. Please check your API key and try again.");
+        setLoading(false);
+        return;
+      }
+
+      // If test passes, save the key
       const token = localStorage.getItem("token");
       const response = await fetch("/api/settings/mistral-key", {
         method: "POST",
@@ -100,7 +127,7 @@ export default function SettingsPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ apiKey: mistralApiKey }),
+        body: JSON.stringify({ apiKey: mistralApiKey.trim() }),
       });
 
       if (!response.ok) {
@@ -110,13 +137,24 @@ export default function SettingsPage() {
 
       setMistralApiKey("");
       setApiKeyConfigured(true);
-      showNotification("success", "Mistral API key saved and encrypted successfully");
+      setUpdatingKey(false);
+      showNotification("success", "Mistral API key tested and saved successfully");
     } catch (error) {
       console.error("Error saving API key:", error);
       showNotification("error", error instanceof Error ? error.message : "Failed to save API key");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleUpdateKey = () => {
+    setUpdatingKey(true);
+    setMistralApiKey("");
+  };
+
+  const handleCancelUpdate = () => {
+    setUpdatingKey(false);
+    setMistralApiKey("");
   };
 
   const handleTestConnection = async () => {
@@ -218,70 +256,86 @@ export default function SettingsPage() {
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
                 <span className="text-sm">Checking API key status...</span>
               </div>
-            ) : apiKeyConfigured ? (
-              <div className="flex items-center gap-2 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
-                <div>
-                  <p className="text-sm font-medium text-green-900">API Key Configured</p>
-                  <p className="text-xs text-green-700">Your Mistral API key is encrypted and stored securely</p>
+            ) : apiKeyConfigured && !updatingKey ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-green-600" />
+                    <div>
+                      <p className="text-sm font-medium text-green-900">API Key Configured</p>
+                      <p className="text-xs text-green-700">Your Mistral API key is encrypted and stored securely</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={handleUpdateKey} variant="outline" size="sm">
+                      Update Key
+                    </Button>
+                    <Button onClick={handleTestConnection} disabled={testing} variant="outline" size="sm">
+                      {testing ? (
+                        <>
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-slate-600 mr-2"></div>
+                          Testing...
+                        </>
+                      ) : (
+                        <>
+                          <TestTube className="h-3 w-3 mr-2" />
+                          Test
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
             ) : (
-              <div className="flex items-center gap-2 p-4 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
-                <AlertCircle className="h-5 w-5 text-yellow-600" />
+              <>
+                {!apiKeyConfigured && (
+                  <div className="flex items-center gap-2 p-4 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
+                    <AlertCircle className="h-5 w-5 text-yellow-600" />
+                    <div>
+                      <p className="text-sm font-medium text-yellow-900">API Key Required</p>
+                      <p className="text-xs text-yellow-700">Enter your Mistral API key to enable AI features</p>
+                    </div>
+                  </div>
+                )}
                 <div>
-                  <p className="text-sm font-medium text-yellow-900">API Key Required</p>
-                  <p className="text-xs text-yellow-700">Enter your Mistral API key to enable AI features</p>
+                  <Label htmlFor="mistral-key">Mistral API Key</Label>
+                  <Input
+                    id="mistral-key"
+                    type="password"
+                    placeholder="Enter your Mistral API key"
+                    value={mistralApiKey}
+                    onChange={(e) => setMistralApiKey(e.target.value)}
+                    disabled={loading}
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Get your API key from{" "}
+                    <a href="https://console.mistral.ai/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                      Mistral Console
+                    </a>
+                  </p>
                 </div>
-              </div>
+                <div className="flex gap-2">
+                  <Button onClick={handleSaveMistralKey} disabled={loading || !mistralApiKey.trim()} className="flex-1">
+                    {loading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        {updatingKey ? "Updating..." : "Saving..."}
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        {updatingKey ? "Update API Key" : "Save API Key"}
+                      </>
+                    )}
+                  </Button>
+                  {updatingKey && (
+                    <Button onClick={handleCancelUpdate} variant="outline" disabled={loading}>
+                      Cancel
+                    </Button>
+                  )}
+                </div>
+              </>
             )}
-            
-            <div>
-              <Label htmlFor="mistral-key">Mistral API Key</Label>
-              <Input
-                id="mistral-key"
-                type="password"
-                placeholder="Enter your Mistral API key"
-                value={mistralApiKey}
-                onChange={(e) => setMistralApiKey(e.target.value)}
-                disabled={loading}
-              />
-              <p className="text-xs text-slate-500 mt-1">
-                Get your API key from{" "}
-                <a href="https://console.mistral.ai/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                  Mistral Console
-                </a>
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={handleSaveMistralKey} disabled={loading || !mistralApiKey.trim()} className="flex-1">
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Saving...
-                  </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      Save API Key
-                    </>
-                  )}
-              </Button>
-              {apiKeyConfigured && (
-                <Button onClick={handleTestConnection} disabled={testing} variant="outline">
-                  {testing ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-600 mr-2"></div>
-                      Testing...
-                    </>
-                  ) : (
-                    <>
-                      Test Connection
-                    </>
-                  )}
-                </Button>
-              )}
-            </div>
           </CardContent>
         </Card>
 
