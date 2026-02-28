@@ -1,5 +1,5 @@
 import { Mistral } from "@mistralai/mistralai";
-import { DetectedEntity, EntityType } from "./privacy-engine";
+import type { DetectedEntity, EntityType } from "./privacy-engine";
 
 export interface AIDetectionResult {
   entities: Array<{
