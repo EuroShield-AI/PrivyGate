@@ -182,11 +182,26 @@ npm install
 ```
 
 2. Set up environment variables in `apps/web/.env`:
+
+Create the file `apps/web/.env` with the following content:
+
 ```bash
-DATABASE_URL="mysql://user:password@localhost:3306/privygate"
-MISTRAL_API_KEY="your-mistral-api-key"
-ENCRYPTION_SECRET="your-32-character-encryption-secret-key"
+# Database connection string
+# Format: mysql://USERNAME:PASSWORD@HOST:PORT/DATABASE_NAME
+DATABASE_URL="mysql://root:yourpassword@localhost:3306/privygate"
+
+# Mistral AI API key (get from https://console.mistral.ai/)
+MISTRAL_API_KEY="your-mistral-api-key-here"
+
+# Encryption secret (must be 32+ characters)
+# Generate one with: openssl rand -base64 32
+ENCRYPTION_SECRET="IxcXnMi6+8n68fuz7YmwLwovYemBW0iThvOiJyUKVbg="
 ```
+
+**Important Notes:**
+- **DATABASE_URL**: Replace with your MySQL credentials. For Docker Compose, use `mysql://privygate:privygate@db:3306/privygate`
+- **MISTRAL_API_KEY**: Get your API key from [Mistral Console](https://console.mistral.ai/)
+- **ENCRYPTION_SECRET**: Use the generated value above, or generate a new one with `openssl rand -base64 32`. **Never change this after data is encrypted!**
 
 3. Generate Prisma Client:
 ```bash
