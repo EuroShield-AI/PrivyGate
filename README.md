@@ -1,30 +1,41 @@
-# PrivyGate
-### Privacy-by-Design AI Infrastructure for Europe
+# 🛡️ PrivyGate
 
-PrivyGate is a GDPR-first AI privacy gateway that enables European organizations to safely adopt LLM workflows.
+<div align="center">
 
-It detects and pseudonymizes personal data before sending content to Mistral AI models, enforces structured outputs, and generates audit-ready compliance logs — ensuring AI innovation without compromising data protection.
+**Privacy-by-Design AI Infrastructure for Europe**
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
+[![Open Source](https://img.shields.io/badge/Open%20Source-Yes-green)](./DEPENDENCIES.md)
+
+*Safely adopt LLM workflows without exposing personal data or violating GDPR principles*
+
+[Features](#-core-capabilities) • [Quick Start](#-local-development) • [Documentation](#-documentation) • [API Docs](#-api-documentation)
+
+</div>
 
 ---
 
-## Why PrivyGate?
+## 🎯 Why PrivyGate?
 
 European teams face a major blocker when adopting AI:
 
-> "How can we use LLMs without exposing personal data or violating GDPR principles?"
+> **"How can we use LLMs without exposing personal data or violating GDPR principles?"**
 
-PrivyGate acts as a secure privacy layer between sensitive data and AI systems.
+PrivyGate acts as a **secure privacy layer** between sensitive data and AI systems, enabling safe AI adoption while maintaining full GDPR compliance.
 
-It enforces:
-- **Data minimization** - Only necessary data is processed
-- **Reversible pseudonymization** - Personal data is tokenized before AI processing
-- **Full auditability** - Complete audit trails for compliance
-- **Controlled reinjection** - Selective reveal of original values
-- **Compliance documentation** - RoPA exports and DPIA support
+### Core Principles
+
+- 🔒 **Data Minimization** - Only necessary data is processed
+- 🔐 **Reversible Pseudonymization** - Personal data is tokenized before AI processing
+- 📋 **Full Auditability** - Complete audit trails for compliance
+- 🎛️ **Controlled Reinjection** - Selective reveal of original values
+- 📄 **Compliance Documentation** - RoPA exports and DPIA support
 
 ---
 
-## Core Capabilities
+## ✨ Core Capabilities
 
 ### 🔍 PII Detection
 Detects personal data using:
@@ -46,7 +57,7 @@ Processes only redacted data using Mistral AI:
 - **Structured JSON outputs** - Schema-enforced responses
 - **Model selection** - Choose from 12+ Mistral models
 
-### 📄 PDF & Document Support
+### 📄 File Processing
 - PDF text extraction via `pdf2json`
 - DOCX parsing via `mammoth`
 - Automatic chunking for large files (>10k words)
@@ -81,7 +92,7 @@ Designed for ERP, CRM, helpdesk, and internal tooling integration.
 
 ---
 
-## Architecture Overview
+## 🏗️ Architecture Overview
 
 ```
 Input (text/PDF/DOCX)
@@ -101,11 +112,41 @@ Audit Log Generation
 Compliance Export (RoPA, DPIA)
 ```
 
-This architecture ensures sensitive data is never unnecessarily exposed to AI systems.
+This architecture ensures sensitive data is **never unnecessarily exposed** to AI systems.
 
 ---
 
-## Tech Stack
+## 📸 Screenshots
+
+<div align="center">
+
+### Dashboard Overview
+![Dashboard](./docs/screenshots/dashboard.png)
+*Main dashboard with dark theme and sidebar navigation*
+
+### Text Processing
+![Text Processing](./docs/screenshots/text-processing.png)
+*PII detection and AI processing interface*
+
+### File Processing
+![File Processing](./docs/screenshots/file-processing.png)
+*Document upload and processing workflow*
+
+### GDPR Analyzer
+![GDPR Analyzer](./docs/screenshots/gdpr-analyzer.png)
+*Website compliance analysis tool*
+
+### Settings
+![Settings](./docs/screenshots/settings.png)
+*User settings and API key management*
+
+</div>
+
+> **Note:** Screenshots should be added to `docs/screenshots/` directory. See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
+
+---
+
+## 🛠️ Tech Stack
 
 ### Frontend
 - **Next.js 16+** (MIT) - App Router with React Server Components
@@ -116,7 +157,7 @@ This architecture ensures sensitive data is never unnecessarily exposed to AI sy
 - **React Markdown** (MIT) - Markdown rendering
 
 ### Backend
-- **Drizzle ORM** (Apache 2.0) - TypeScript ORM (replaced Prisma)
+- **Drizzle ORM** (Apache 2.0) - TypeScript ORM
 - **MySQL 8.0+** - Database
 - **Zod** (MIT) - Schema validation
 - **jsonwebtoken** (MIT) - JWT authentication
@@ -135,80 +176,66 @@ This architecture ensures sensitive data is never unnecessarily exposed to AI sy
 - **Upstash Redis** (Apache 2.0) - Rate limiting (optional)
 - **Nodemailer** (MIT) - Email OTP delivery
 
-### All Dependencies are Open Source
-All dependencies use permissive licenses (MIT, Apache 2.0, BSD). See [DEPENDENCIES.md](./DEPENDENCIES.md) for full license verification.
+> **All Dependencies are Open Source** - All dependencies use permissive licenses (MIT, Apache 2.0, BSD). See [DEPENDENCIES.md](./DEPENDENCIES.md) for full license verification.
 
 ---
 
-## Features
+## 🚀 Quick Start
 
-### User Management
-- Email-based OTP authentication
-- User profiles with display names
-- Role-based access control (user/admin)
-- Secure session management with JWT
+### Prerequisites
 
-### Model Selection
-Choose from 12+ Mistral AI models:
-- **Mistral Large 3** (`mistral-large-2512`) - Default, best quality
-- **Mistral Medium 3.1** (`mistral-medium-3101`)
-- **Mistral Small 3.2** (`mistral-small-3201`)
-- **Ministral 3** (14B, 8B, 3B variants)
-- **Magistral** (Medium, Small) - Reasoning models
-- **Devstral 2** - Code agents
-- **Codestral** - Code completion
-- **Pixtral Large** - Multimodal (image + text)
-- Legacy models for backward compatibility
+- **Node.js 20+**
+- **MySQL 8.0+**
+- **Mistral API key** (get from [Mistral Console](https://console.mistral.ai/))
 
-### Security
-- AES-256-GCM encryption for sensitive data
-- User-specific encrypted API keys
-- Secure password hashing (bcrypt)
-- JWT-based authentication
-- Rate limiting (configurable)
-- Input validation with Zod schemas
+### Installation
 
-### UI/UX
-- Modern, flat design with Material-inspired components
-- Responsive layout with collapsible sidebar
-- Drag & drop file uploads
-- Real-time notifications
-- API usage examples in modal dialogs
-- Swagger UI for API documentation
-- Markdown rendering for AI results
-- Custom scrollbars for long content
-
----
-
-## Project Structure
-
-```
-PrivyGate/
-├── apps/
-│   └── web/                    # Next.js application
-│       ├── app/                # App Router pages
-│       │   ├── api/            # API routes
-│       │   ├── dashboard/     # Dashboard pages
-│       │   └── home/           # Homepage
-│       ├── components/        # React components
-│       ├── db/                 # Drizzle ORM schema
-│       ├── lib/                # Core libraries
-│       │   ├── privacy-engine.ts
-│       │   ├── encryption.ts
-│       │   ├── audit.ts
-│       │   ├── ai-detector.ts
-│       │   └── ...
-│       ├── __tests__/          # Test files
-│       └── scripts/            # Utility scripts
-├── packages/                   # Shared packages (future)
-├── docker-compose.yml          # Docker setup
-├── Dockerfile                  # Production build
-└── README.md                   # This file
+1. **Clone the repository:**
+```bash
+git clone <repository-url>
+cd PrivyGate
+npm install
 ```
 
+2. **Set up environment variables:**
+```bash
+cd apps/web
+cp .env.example .env
+# Edit .env with your configuration
+```
+
+3. **Set up database:**
+```bash
+# Run migration script
+node scripts/add-selected-model.js
+
+# Or use Drizzle Kit
+npm run db:push
+```
+
+4. **Start development server:**
+```bash
+npm run dev
+```
+
+The app will be available at `http://localhost:3000`
+
+### Docker Setup
+
+Use Docker Compose for complete setup:
+
+```bash
+docker-compose up -d
+```
+
+This starts:
+- **MySQL 8.0** - Database
+- **ChromaDB** - Vector database
+- **PrivyGate App** - Next.js application
+
 ---
 
-## Environment Variables
+## ⚙️ Environment Variables
 
 Create `apps/web/.env`:
 
@@ -250,47 +277,7 @@ CHROMA_URL="http://localhost:8000"
 
 ---
 
-## Local Development
-
-### Prerequisites
-
-- **Node.js 20+**
-- **MySQL 8.0+**
-- **Mistral API key** (get from [Mistral Console](https://console.mistral.ai/))
-
-### Setup
-
-1. **Clone and install:**
-```bash
-git clone <repository-url>
-cd PrivyGate
-npm install
-```
-
-2. **Set up environment variables:**
-```bash
-cd apps/web
-cp .env.example .env
-# Edit .env with your configuration
-```
-
-3. **Set up database:**
-```bash
-# Run migration script to add selectedModel column
-node scripts/add-selected-model.js
-
-# Or use Drizzle Kit
-npm run db:push
-```
-
-4. **Start development server:**
-```bash
-npm run dev
-```
-
-The app will be available at `http://localhost:3000`
-
-### Testing
+## 🧪 Testing
 
 Run tests:
 ```bash
@@ -300,35 +287,14 @@ npm run test:coverage # With coverage report
 ```
 
 Test coverage includes:
-- PII detection (email, phone, IBAN, names)
-- Pseudonymization vault
-- Encryption/decryption
-- Critical API endpoints
+- ✅ PII detection (email, phone, IBAN, names)
+- ✅ Pseudonymization vault
+- ✅ Encryption/decryption
+- ✅ Critical API endpoints
 
 ---
 
-## Docker Setup
-
-Use Docker Compose for complete setup:
-
-```bash
-docker-compose up -d
-```
-
-This starts:
-- **MySQL 8.0** - Database
-- **ChromaDB** - Vector database
-- **PrivyGate App** - Next.js application
-
-Make sure to set required environment variables in `.env`:
-- `MISTRAL_API_KEY` (optional - can be set per-user)
-- `ENCRYPTION_SECRET`
-- `NEXTAUTH_SECRET`
-- `SMTP_*` (for email OTP)
-
----
-
-## Production Deployment
+## 📦 Production Deployment
 
 ### Build
 
@@ -365,7 +331,16 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment guide.
 
 ---
 
-## API Documentation
+## 📚 Documentation
+
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Detailed deployment guide
+- **[DEPENDENCIES.md](./DEPENDENCIES.md)** - Open-source license verification
+- **[PRODUCTION.md](./PRODUCTION.md)** - Production readiness checklist
+- **[MISTRAL_USAGE.md](./MISTRAL_USAGE.md)** - Mistral AI usage and models
+
+---
+
+## 🔌 API Documentation
 
 Interactive API documentation available at:
 - **Swagger UI**: `/api/swagger`
@@ -375,22 +350,47 @@ All endpoints require Bearer token authentication (JWT).
 
 ---
 
-## Enterprise Features
+## 🎯 Features
 
-- ✅ **Rate Limiting** - Configurable API rate limits
-- ✅ **Authentication** - JWT-based with OTP login
-- ✅ **Vector Database** - ChromaDB for large file processing
-- ✅ **Health Checks** - `/api/health` endpoint
-- ✅ **Structured Logging** - JSON-formatted logs
-- ✅ **File Processing** - Automatic chunking for large files
-- ✅ **Compliance** - Full audit trails and RoPA exports
-- ✅ **User Management** - Profiles, roles, API key management
-- ✅ **Model Selection** - 12+ Mistral models available
-- ✅ **GDPR Analyzer** - Automated website compliance scanning
+### User Management
+- ✅ Email-based OTP authentication
+- ✅ User profiles with display names
+- ✅ Role-based access control (user/admin)
+- ✅ Secure session management with JWT
+
+### Model Selection
+Choose from 12+ Mistral AI models:
+- **Mistral Large 3** (`mistral-large-2512`) - Default, best quality
+- **Mistral Medium 3.1** (`mistral-medium-3101`)
+- **Mistral Small 3.2** (`mistral-small-3201`)
+- **Ministral 3** (14B, 8B, 3B variants)
+- **Magistral** (Medium, Small) - Reasoning models
+- **Devstral 2** - Code agents
+- **Codestral** - Code completion
+- **Pixtral Large** - Multimodal (image + text)
+- Legacy models for backward compatibility
+
+### Security
+- ✅ AES-256-GCM encryption for sensitive data
+- ✅ User-specific encrypted API keys
+- ✅ Secure password hashing (bcrypt)
+- ✅ JWT-based authentication
+- ✅ Rate limiting (configurable)
+- ✅ Input validation with Zod schemas
+
+### UI/UX
+- ✅ Modern, flat design with dark theme
+- ✅ Responsive layout with collapsible sidebar
+- ✅ Drag & drop file uploads
+- ✅ Real-time notifications
+- ✅ API usage examples in modal dialogs
+- ✅ Swagger UI for API documentation
+- ✅ Markdown rendering for AI results
+- ✅ Custom scrollbars for long content
 
 ---
 
-## Roadmap
+## 🗺️ Roadmap
 
 - [x] Core PII detection engine
 - [x] Pseudonymization vault
@@ -409,7 +409,7 @@ All endpoints require Bearer token authentication (JWT).
 
 ---
 
-## License
+## 📄 License
 
 **MIT License** - See [LICENSE](./LICENSE) file
 
@@ -417,7 +417,7 @@ All dependencies use permissive open-source licenses (MIT, Apache 2.0, BSD). See
 
 ---
 
-## Contributing
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -428,12 +428,18 @@ All dependencies use permissive open-source licenses (MIT, Apache 2.0, BSD). See
 
 ---
 
-## Support
+## 📞 Support
 
 - **Documentation**: See [DEPLOYMENT.md](./DEPLOYMENT.md) and [MISTRAL_USAGE.md](./MISTRAL_USAGE.md)
 - **API Docs**: `/api/swagger`
-- **Issues**: GitHub Issues
+- **Issues**: GitHub/GitLab Issues
 
 ---
 
-Built with ❤️ for European privacy compliance
+<div align="center">
+
+**Built with ❤️ for European privacy compliance**
+
+[⬆ Back to Top](#-privygate)
+
+</div>
