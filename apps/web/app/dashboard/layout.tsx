@@ -37,11 +37,12 @@ export default function DashboardLayout({
       console.error("Failed to decode token");
     }
 
-    // Fetch token usage (mock for now)
-    fetchTokenUsage();
-    
-    // Check Mistral API key status
-    checkMistralStatus();
+    // Check Mistral API key status first, then fetch usage if configured
+    checkMistralStatus().then((configured) => {
+      if (configured) {
+        fetchTokenUsage();
+      }
+    });
     
     // Fetch user profile for name
     fetchUserProfile();
@@ -67,23 +68,42 @@ export default function DashboardLayout({
   const checkMistralStatus = async () => {
     try {
       const token = localStorage.getItem("token");
-      if (!token) return;
+      if (!token) return false;
       
       const response = await fetch("/api/settings/mistral-key", {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
         const data = await response.json();
-        setMistralConfigured(data.configured);
+        const configured = data.configured || false;
+        setMistralConfigured(configured);
+        return configured;
       }
+      return false;
     } catch (error) {
       console.error("Error checking Mistral status:", error);
+      return false;
     }
   };
 
   const fetchTokenUsage = async () => {
-    // TODO: Implement actual token usage API
-    setTokenUsage({ used: 125000, limit: 1000000 });
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      
+      const response = await fetch("/api/settings/usage", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setTokenUsage({ used: data.used || 0, limit: data.limit || 1000000 });
+        setModel(data.model || "mistral-large-latest");
+      }
+    } catch (error) {
+      console.error("Error fetching token usage:", error);
+      // Fallback to defaults
+      setTokenUsage({ used: 0, limit: 1000000 });
+    }
   };
 
   const handleLogout = () => {
@@ -123,32 +143,30 @@ export default function DashboardLayout({
           </div>
 
           <div className="flex items-center gap-6">
-            {/* Token Usage */}
-            <div className="hidden md:flex items-center gap-4">
-              <div className="text-right">
-                <p className="text-xs text-slate-500">Model</p>
-                <p className="text-sm font-medium text-slate-900 flex items-center gap-1">
-                  {model}
-                  {mistralConfigured ? (
+            {/* Token Usage - Only show if API key is configured */}
+            {mistralConfigured && (
+              <div className="hidden md:flex items-center gap-4">
+                <div className="text-right">
+                  <p className="text-xs text-slate-500">Model</p>
+                  <p className="text-sm font-medium text-slate-900 flex items-center gap-1">
+                    {model}
                     <span className="h-2 w-2 bg-green-500 rounded-full" title="Mistral API configured" />
-                  ) : (
-                    <span className="h-2 w-2 bg-yellow-500 rounded-full" title="Mistral API not configured" />
-                  )}
-                </p>
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-slate-500">Tokens</p>
+                  <p className="text-sm font-medium text-slate-900">
+                    {tokenUsage.used.toLocaleString()} / {tokenUsage.limit.toLocaleString()}
+                  </p>
+                </div>
+                <div className="w-24 h-2 bg-slate-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-blue-600 transition-all"
+                    style={{ width: `${Math.min((tokenUsage.used / tokenUsage.limit) * 100, 100)}%` }}
+                  />
+                </div>
               </div>
-              <div className="text-right">
-                <p className="text-xs text-slate-500">Tokens</p>
-                <p className="text-sm font-medium text-slate-900">
-                  {tokenUsage.used.toLocaleString()} / {tokenUsage.limit.toLocaleString()}
-                </p>
-              </div>
-              <div className="w-24 h-2 bg-slate-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-blue-600 transition-all"
-                  style={{ width: `${(tokenUsage.used / tokenUsage.limit) * 100}%` }}
-                />
-              </div>
-            </div>
+            )}
 
             {/* User & Logout */}
             <div className="flex items-center gap-3">
