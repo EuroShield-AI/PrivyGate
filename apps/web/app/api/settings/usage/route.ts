@@ -37,19 +37,19 @@ export async function GET(request: NextRequest) {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     if (jobIds.length > 0) {
-      // Get all audit logs with token usage for user's jobs
-      // Use IN clause with proper SQL syntax for MySQL
-      const placeholders = jobIds.map(() => '?').join(',');
-      const auditLogsWithTokens = await db
+      // Get all audit logs and filter in JavaScript for simplicity
+      const allAuditLogs = await db
         .select()
         .from(auditLogs)
-        .where(
-          sql`${auditLogs.jobId} IN (${sql.raw(placeholders)}) AND JSON_EXTRACT(${auditLogs.metadata}, '$.totalTokens') IS NOT NULL`,
-          ...jobIds
-        );
+        .where(sql`${auditLogs.jobId} IS NOT NULL`);
 
-      // Sum up tokens from audit logs
-      for (const log of auditLogsWithTokens) {
+      // Filter and sum tokens
+      for (const log of allAuditLogs) {
+        // Check if this log belongs to one of the user's jobs
+        if (!log.jobId || !jobIds.includes(log.jobId)) {
+          continue;
+        }
+
         try {
           const metadata = JSON.parse(log.metadata as string);
           const tokens = metadata.totalTokens || 0;
