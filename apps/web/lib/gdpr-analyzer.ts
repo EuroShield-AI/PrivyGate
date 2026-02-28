@@ -144,64 +144,149 @@ export async function analyzeWebsite(
     let aiSummary: string | undefined;
     let aiAnalysis: Record<string, string> = {};
 
-    // Use Mistral AI for enhanced analysis if API key is provided
+    // Use Mistral AI for comprehensive analysis if API key is provided
     if (mistralApiKey && pageText) {
       try {
         onStatusUpdate?.("Analyzing with AI...");
         const { Mistral } = await import("@mistralai/mistralai");
         const mistral = new Mistral({ apiKey: mistralApiKey });
         
-        const prompt = `Analyze this website's GDPR compliance. Website URL: ${url}
+        // First, use AI to detect PII and personal data in the website content
+        onStatusUpdate?.("Detecting personal data with AI...");
+        const piiDetectionPrompt = `Analyze the following website content and identify all instances of personal data collection, processing, or storage mentioned.
+
+Website URL: ${url}
+Content: ${pageText.substring(0, 15000)}
+
+Return JSON with:
+{
+  "personalDataFound": ["list of specific personal data types mentioned"],
+  "dataProcessingActivities": ["list of data processing activities"],
+  "thirdPartySharing": ["any third parties mentioned for data sharing"],
+  "userRights": ["GDPR rights mentioned (access, deletion, portability, etc.)"],
+  "retentionPeriods": ["any data retention periods mentioned"]
+}`;
+
+        const piiResponse = await mistral.chat.complete({
+          model: "mistral-large-latest",
+          messages: [{ role: "user", content: piiDetectionPrompt }],
+          responseFormat: { type: "json_object" },
+          temperature: 0.2,
+        });
+
+        const piiData = JSON.parse(piiResponse.choices[0]?.message?.content || "{}");
         
-Key findings so far:
+        // Add findings based on AI PII detection
+        if (piiData.personalDataFound && piiData.personalDataFound.length > 0) {
+          findings.push({
+            type: "data_collection",
+            severity: "high",
+            description: `AI detected personal data types: ${piiData.personalDataFound.join(", ")}`,
+            recommendation: "Ensure all personal data collection is disclosed in privacy policy",
+            aiAnalysis: `Processing activities: ${piiData.dataProcessingActivities?.join(", ") || "Not specified"}`,
+          });
+        }
+
+        if (piiData.thirdPartySharing && piiData.thirdPartySharing.length > 0) {
+          findings.push({
+            type: "data_collection",
+            severity: "medium",
+            description: `Third-party data sharing detected: ${piiData.thirdPartySharing.join(", ")}`,
+            recommendation: "Ensure third-party sharing is clearly disclosed and consent obtained",
+            aiAnalysis: "AI-detected third-party sharing",
+          });
+        }
+
+        // Comprehensive GDPR compliance analysis
+        onStatusUpdate?.("Performing comprehensive GDPR analysis...");
+        const compliancePrompt = `Perform a comprehensive GDPR compliance analysis for this website.
+
+Website URL: ${url}
+
+Current automated findings:
 - Privacy Policy: ${hasPrivacyPolicy ? "Found" : "Missing"}
 - Cookie Banner: ${hasCookieBanner.length > 0 ? "Found" : "Missing"}
 - Data Collection Points: ${dataCollectionPoints}
 - Compliance Score: ${score}/100
 
-Website content (first 10k chars):
-${pageText.substring(0, 10000)}
+Detected Personal Data: ${piiData.personalDataFound?.join(", ") || "None detected"}
+Data Processing: ${piiData.dataProcessingActivities?.join(", ") || "Not specified"}
+Third-Party Sharing: ${piiData.thirdPartySharing?.join(", ") || "None detected"}
+User Rights Mentioned: ${piiData.userRights?.join(", ") || "Not specified"}
 
-Provide:
-1. A brief summary (2-3 sentences) of overall GDPR compliance status
-2. Specific recommendations for each finding type
-3. Any additional GDPR concerns not detected by automated checks
+Website content (first 15k chars):
+${pageText.substring(0, 15000)}
+
+Provide a comprehensive GDPR compliance analysis:
+1. Overall compliance assessment (2-3 sentences)
+2. Specific recommendations for each GDPR requirement
+3. Missing GDPR elements
+4. Risk assessment
+5. Priority actions
 
 Format as JSON:
 {
   "summary": "...",
+  "complianceScore": 0-100,
   "recommendations": {
     "privacy_policy": "...",
     "consent": "...",
-    "data_collection": "..."
+    "data_collection": "...",
+    "user_rights": "...",
+    "data_retention": "...",
+    "security": "..."
   },
-  "additional_concerns": "..."
+  "missingElements": ["list of missing GDPR elements"],
+  "riskLevel": "low|medium|high",
+  "priorityActions": ["list of priority actions"]
 }`;
 
-        const response = await mistral.chat.complete({
+        const complianceResponse = await mistral.chat.complete({
           model: "mistral-large-latest",
-          messages: [{ role: "user", content: prompt }],
+          messages: [{ role: "user", content: compliancePrompt }],
           responseFormat: { type: "json_object" },
+          temperature: 0.2,
         });
 
-        const aiResponse = JSON.parse(response.choices[0]?.message?.content || "{}");
+        const aiResponse = JSON.parse(complianceResponse.choices[0]?.message?.content || "{}");
         aiSummary = aiResponse.summary;
         
-        // Enhance findings with AI recommendations
+        // Update score based on AI assessment if provided
+        if (aiResponse.complianceScore !== undefined) {
+          score = Math.round((score + aiResponse.complianceScore) / 2); // Average with automated score
+        }
+        
+        // Enhance existing findings with AI recommendations
         findings.forEach((finding) => {
-          if (aiResponse.recommendations?.[finding.type]) {
-            finding.aiAnalysis = aiResponse.recommendations[finding.type];
+          const recKey = finding.type === "privacy_policy" ? "privacy_policy" :
+                        finding.type === "consent" ? "consent" :
+                        finding.type === "data_collection" ? "data_collection" : null;
+          if (recKey && aiResponse.recommendations?.[recKey]) {
+            finding.aiAnalysis = aiResponse.recommendations[recKey];
           }
         });
 
-        // Add additional concerns as new findings
-        if (aiResponse.additional_concerns) {
+        // Add missing elements as findings
+        if (aiResponse.missingElements && aiResponse.missingElements.length > 0) {
+          aiResponse.missingElements.forEach((element: string) => {
+            findings.push({
+              type: "data_collection",
+              severity: aiResponse.riskLevel === "high" ? "high" : "medium",
+              description: `Missing GDPR element: ${element}`,
+              recommendation: aiResponse.recommendations?.[element.toLowerCase().replace(/\s+/g, "_")] || "Address this missing element",
+              aiAnalysis: "AI-detected missing GDPR requirement",
+            });
+          });
+        }
+
+        // Add priority actions
+        if (aiResponse.priorityActions && aiResponse.priorityActions.length > 0) {
           findings.push({
             type: "data_collection",
-            severity: "medium",
-            description: aiResponse.additional_concerns,
-            recommendation: "Review and address these concerns",
-            aiAnalysis: "AI-detected concern",
+            severity: "high",
+            description: `Priority actions: ${aiResponse.priorityActions.join("; ")}`,
+            recommendation: "Address these priority actions to improve GDPR compliance",
+            aiAnalysis: `Risk level: ${aiResponse.riskLevel || "medium"}`,
           });
         }
       } catch (error) {

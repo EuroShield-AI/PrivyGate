@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db, jobs, detectedEntities } from "@/lib/db";
 import { PIIDetector, PseudonymizationVault } from "@/lib/privacy-engine";
+import { AIPIIDetector } from "@/lib/ai-detector";
 import { encrypt } from "@/lib/encryption";
 import { AuditLogger } from "@/lib/audit";
 import { requireAuth } from "@/lib/auth";
+import { getMistralApiKey } from "@/lib/mistral-config";
 import { eq } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 
@@ -41,10 +43,35 @@ export async function POST(request: NextRequest) {
       retentionMode: retentionMode || "standard",
     });
 
-    // Detect and pseudonymize PII
-    const detector = new PIIDetector();
+    // Get user's Mistral API key for AI detection
+    const mistralApiKey = await getMistralApiKey(auth.user.id);
+    
+    // Detect PII using AI if API key is available, otherwise fallback to regex
+    let detected;
+    if (mistralApiKey) {
+      try {
+        const aiDetector = new AIPIIDetector(mistralApiKey);
+        detected = await aiDetector.detect(text);
+        
+        // If AI detection finds nothing or fails, fallback to regex
+        if (detected.length === 0) {
+          const regexDetector = new PIIDetector();
+          detected = regexDetector.detect(text);
+        }
+      } catch (error) {
+        console.error("AI detection failed, falling back to regex:", error);
+        // Fallback to regex detection
+        const regexDetector = new PIIDetector();
+        detected = regexDetector.detect(text);
+      }
+    } else {
+      // Use regex detection if no API key
+      const regexDetector = new PIIDetector();
+      detected = regexDetector.detect(text);
+    }
+
+    // Pseudonymize detected entities
     const vault = new PseudonymizationVault();
-    const detected = detector.detect(text);
     const redactedText = vault.pseudonymize(text, detected);
 
     // Store detected entities and prepare response
@@ -79,6 +106,7 @@ export async function POST(request: NextRequest) {
     await auditLogger.log(jobId, "REDACTION_COMPLETED", {
       entitiesDetected: detected.length,
       retentionMode,
+      detectionMethod: mistralApiKey ? "ai" : "regex",
     });
 
     // Prepare entities for response
