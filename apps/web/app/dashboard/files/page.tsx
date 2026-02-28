@@ -12,6 +12,8 @@ import { Breadcrumbs } from "@/components/breadcrumbs";
 import { Notification } from "@/components/notification";
 import { APIExamples } from "@/components/api-examples";
 import { useRouter } from "next/navigation";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface FileUploadResult {
   fileId: string;
@@ -445,11 +447,11 @@ export default function FilesPage() {
                       </div>
                       <div>
                         <Label>Redacted Text</Label>
-                        <Textarea
-                          value={redactionResult.redactedText}
-                          readOnly
-                          className="min-h-[200px] mt-2 bg-slate-50 font-mono text-xs"
-                        />
+                        <div className="mt-2 p-4 bg-slate-50 rounded-md border border-slate-200 overflow-auto max-h-[500px] custom-scrollbar">
+                          <pre className="whitespace-pre-wrap break-words text-sm font-mono text-slate-700">
+                            {redactionResult.redactedText}
+                          </pre>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -502,9 +504,19 @@ export default function FilesPage() {
                     {processResult && (
                       <div>
                         <Label>Result</Label>
-                        <pre className="mt-2 p-4 bg-slate-50 rounded-md text-sm overflow-auto max-h-[400px] border font-mono">
-                          {JSON.stringify(processResult.result, null, 2)}
-                        </pre>
+                        <div className="mt-2 p-4 bg-slate-50 rounded-md border border-slate-200 overflow-auto max-h-[600px] custom-scrollbar">
+                          {typeof processResult.result === "string" ? (
+                            <div className="prose prose-sm max-w-none">
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {processResult.result}
+                              </ReactMarkdown>
+                            </div>
+                          ) : (
+                            <pre className="whitespace-pre-wrap break-words text-sm font-mono text-slate-700">
+                              {JSON.stringify(processResult.result, null, 2)}
+                            </pre>
+                          )}
+                        </div>
                       </div>
                     )}
                   </CardContent>
