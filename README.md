@@ -454,6 +454,10 @@ All dependencies use permissive open-source licenses (MIT, Apache 2.0, BSD). See
 
 **Built with ❤️ for European privacy compliance**
 
+**🏆 Mistral Worldwide Hackathon 2026 Entry**
+
+Built using [Mistral Vibe](https://worldwide-hackathon.mistral.ai/) for AI-assisted development
+
 [⬆ Back to Top](#-privygate)
 
 </div>
