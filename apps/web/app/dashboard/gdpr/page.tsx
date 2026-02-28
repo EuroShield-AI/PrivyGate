@@ -325,10 +325,9 @@ export default function GDPRAnalyzerPage() {
                 </div>
               )}
             </CardContent>
-              </Card>
-            </div>
+          </Card>
 
-            <APIUsageModal
+        <APIUsageModal
               open={apiModalOpen}
               onOpenChange={setApiModalOpen}
               examples={apiExamples}
