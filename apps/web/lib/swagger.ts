@@ -1,5 +1,18 @@
 import swaggerJsdoc from "swagger-jsdoc";
 
+// Get base URL from environment or use localhost fallback
+const getBaseUrl = () => {
+  if (process.env.NEXTAUTH_URL) {
+    return process.env.NEXTAUTH_URL;
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  return "http://localhost:3000";
+};
+
+const baseUrl = getBaseUrl();
+
 const options: swaggerJsdoc.Options = {
   definition: {
     openapi: "3.0.0",
@@ -14,7 +27,7 @@ const options: swaggerJsdoc.Options = {
     },
     servers: [
       {
-        url: process.env.NEXTAUTH_URL || process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000",
+        url: baseUrl,
         description: "API server",
       },
     ],
@@ -24,8 +37,8 @@ const options: swaggerJsdoc.Options = {
           type: "oauth2",
           flows: {
             authorizationCode: {
-              authorizationUrl: `${process.env.NEXTAUTH_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000")}/api/auth/oauth/authorize`,
-              tokenUrl: `${process.env.NEXTAUTH_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000")}/api/auth/oauth/token`,
+              authorizationUrl: `${baseUrl}/api/auth/oauth/authorize`,
+              tokenUrl: `${baseUrl}/api/auth/oauth/token`,
               scopes: {
                 read: "Read access",
                 write: "Write access",
@@ -33,7 +46,7 @@ const options: swaggerJsdoc.Options = {
               },
             },
             clientCredentials: {
-              tokenUrl: `${process.env.NEXTAUTH_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000")}/api/auth/oauth/token`,
+              tokenUrl: `${baseUrl}/api/auth/oauth/token`,
               scopes: {
                 read: "Read access",
                 write: "Write access",
