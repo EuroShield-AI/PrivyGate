@@ -26,7 +26,7 @@ export async function analyzeWebsite(
   url: string,
   mistralApiKey?: string,
   onStatusUpdate?: (status: string) => void,
-  model: string = "mistral-large-latest"
+  model: string = "mistral-large-2512"
 ): Promise<GDPRReport> {
   try {
     onStatusUpdate?.("Loading website (waiting for SPA content to load)...");

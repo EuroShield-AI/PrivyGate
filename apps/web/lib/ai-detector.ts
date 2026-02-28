@@ -15,7 +15,7 @@ export class AIPIIDetector {
   private mistral: Mistral;
   private model: string;
 
-  constructor(apiKey: string, model: string = "mistral-large-latest") {
+  constructor(apiKey: string, model: string = "mistral-large-2512") {
     this.mistral = new Mistral({ apiKey });
     this.model = model;
   }

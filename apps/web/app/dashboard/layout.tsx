@@ -18,7 +18,7 @@ export default function DashboardLayout({
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [model, setModel] = useState("mistral-large-latest");
+  const [model, setModel] = useState("mistral-large-2512");
   const [mistralConfigured, setMistralConfigured] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
   const [notification, setNotification] = useState<{ type: "success" | "error" | "info" | "warning"; message: string } | null>(null);
@@ -99,7 +99,7 @@ export default function DashboardLayout({
       });
       if (response.ok) {
         const data = await response.json();
-        setModel(data.model || "mistral-large-latest");
+        setModel(data.model || "mistral-large-2512");
       }
     } catch (error) {
       console.error("Error fetching selected model:", error);
@@ -107,10 +107,15 @@ export default function DashboardLayout({
   };
 
   const handleModelChange = async (newModel: string) => {
+    if (newModel === model) return; // No change needed
+    
     setSavingModel(true);
     try {
       const token = localStorage.getItem("token");
-      if (!token) return;
+      if (!token) {
+        showNotification("error", "Authentication required");
+        return;
+      }
       
       const response = await fetch("/api/settings/model", {
         method: "POST",
@@ -121,16 +126,18 @@ export default function DashboardLayout({
         body: JSON.stringify({ model: newModel }),
       });
       
+      const data = await response.json();
+      
       if (response.ok) {
         setModel(newModel);
-        showNotification("success", "Model updated successfully");
+        showNotification("success", `Model updated to ${newModel}`);
       } else {
-        const error = await response.json();
-        showNotification("error", error.error || "Failed to update model");
+        console.error("Model update failed:", data);
+        showNotification("error", data.error || "Failed to update model");
       }
     } catch (error) {
       console.error("Error saving model:", error);
-      showNotification("error", "Failed to update model");
+      showNotification("error", "Failed to update model. Please try again.");
     } finally {
       setSavingModel(false);
     }
@@ -196,13 +203,18 @@ export default function DashboardLayout({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="mistral-tiny">mistral-tiny</SelectItem>
-                      <SelectItem value="mistral-small-latest">mistral-small-latest</SelectItem>
-                      <SelectItem value="mistral-medium-latest">mistral-medium-latest</SelectItem>
-                      <SelectItem value="mistral-large-latest">mistral-large-latest</SelectItem>
-                      <SelectItem value="pixtral-large-latest">pixtral-large-latest</SelectItem>
-                      <SelectItem value="open-mistral-7b">open-mistral-7b</SelectItem>
-                      <SelectItem value="open-mixtral-8x7b">open-mixtral-8x7b</SelectItem>
+                      <SelectItem value="mistral-large-2512">Mistral Large 3</SelectItem>
+                      <SelectItem value="mistral-medium-3101">Mistral Medium 3.1</SelectItem>
+                      <SelectItem value="mistral-small-3201">Mistral Small 3.2</SelectItem>
+                      <SelectItem value="ministral-3-14b-2512">Ministral 3 14B</SelectItem>
+                      <SelectItem value="ministral-3-8b-2512">Ministral 3 8B</SelectItem>
+                      <SelectItem value="ministral-3-3b-2512">Ministral 3 3B</SelectItem>
+                      <SelectItem value="magistral-medium-2509">Magistral Medium 1.2</SelectItem>
+                      <SelectItem value="magistral-small-2509">Magistral Small 1.2</SelectItem>
+                      <SelectItem value="devstral-2-2512">Devstral 2</SelectItem>
+                      <SelectItem value="codestral-2508">Codestral</SelectItem>
+                      <SelectItem value="pixtral-large-2411">Pixtral Large</SelectItem>
+                      <SelectItem value="mistral-large-2-1-2411">Mistral Large 2.1</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

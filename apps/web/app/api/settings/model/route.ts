@@ -5,13 +5,18 @@ import { getSelectedModel, saveSelectedModel } from "@/lib/mistral-config";
 
 const modelSchema = z.object({
   model: z.enum([
-    "mistral-tiny",
-    "mistral-small-latest",
-    "mistral-medium-latest",
-    "mistral-large-latest",
-    "pixtral-large-latest",
-    "open-mistral-7b",
-    "open-mixtral-8x7b",
+    "mistral-large-2512",
+    "mistral-medium-3101",
+    "mistral-small-3201",
+    "ministral-3-14b-2512",
+    "ministral-3-8b-2512",
+    "ministral-3-3b-2512",
+    "magistral-medium-2509",
+    "magistral-small-2509",
+    "devstral-2-2512",
+    "codestral-2508",
+    "pixtral-large-2411",
+    "mistral-large-2-1-2411",
   ]),
 });
 
@@ -42,7 +47,7 @@ const modelSchema = z.object({
  *             properties:
  *               model:
  *                 type: string
- *                 enum: [mistral-tiny, mistral-small-latest, mistral-medium-latest, mistral-large-latest, pixtral-large-latest, open-mistral-7b, open-mixtral-8x7b]
+ *                 enum: [mistral-large-2512, mistral-medium-3101, mistral-small-3201, ministral-3-14b-2512, ministral-3-8b-2512, ministral-3-3b-2512, magistral-medium-2509, magistral-small-2509, devstral-2-2512, codestral-2508, pixtral-large-2411, mistral-large-2-1-2411]
  *     responses:
  *       200:
  *         description: Model saved successfully

@@ -60,10 +60,10 @@ export async function getSelectedModel(userId: string): Promise<string> {
       .limit(1);
 
     const user = userResults[0];
-    return user?.selectedModel || "mistral-large-latest";
+    return user?.selectedModel || "mistral-large-2512";
   } catch (error) {
     console.error("Error retrieving selected model:", error);
-    return "mistral-large-latest";
+    return "mistral-large-2512";
   }
 }
 
