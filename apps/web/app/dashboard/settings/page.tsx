@@ -7,15 +7,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { Notification } from "@/components/notification";
-import { Key, Save, CheckCircle2, AlertCircle } from "lucide-react";
+import { Key, Save, CheckCircle2, AlertCircle, TestTube, Copy } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function SettingsPage() {
+  const router = useRouter();
   const [mistralApiKey, setMistralApiKey] = useState("");
   const [apiKeyConfigured, setApiKeyConfigured] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [testing, setTesting] = useState(false);
   const [checking, setChecking] = useState(true);
   const [notification, setNotification] = useState<{ type: "success" | "error" | "info" | "warning"; message: string } | null>(null);
   const [user, setUser] = useState<any>(null);
+  const [oauthClientId, setOauthClientId] = useState("pk_live_51H8xK2...");
+  const [oauthClientSecret, setOauthClientSecret] = useState("sk_live_51H8xK2...");
 
   useEffect(() => {
     // Get user info from token
@@ -94,6 +99,36 @@ export default function SettingsPage() {
     }
   };
 
+  const handleTestConnection = async () => {
+    setTesting(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/settings/mistral-key/test", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        showNotification("success", "Connection successful! API key is valid.");
+      } else {
+        showNotification("error", data.error || "Connection failed. Please check your API key.");
+      }
+    } catch (error) {
+      console.error("Error testing connection:", error);
+      showNotification("error", "Failed to test connection");
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  const copyToClipboard = async (text: string) => {
+    await navigator.clipboard.writeText(text);
+    showNotification("success", "Copied to clipboard");
+  };
+
   return (
     <>
       <Breadcrumbs items={[{ label: "Settings" }]} />
@@ -108,16 +143,17 @@ export default function SettingsPage() {
         </div>
       )}
 
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Settings</h1>
-          <p className="text-slate-600 mt-2">
-            Manage your API credentials and preferences. 
-            Your Mistral API key is encrypted and stored securely for AI-powered features.
-          </p>
-        </div>
+      <div className="grid lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">Settings</h1>
+            <p className="text-slate-600 mt-2">
+              Manage your API credentials and preferences. 
+              Your Mistral API key is encrypted and stored securely for AI-powered features.
+            </p>
+          </div>
 
-        <Card>
+          <Card className="border border-slate-200">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Key className="h-5 w-5" />
@@ -168,23 +204,40 @@ export default function SettingsPage() {
                 </a>
               </p>
             </div>
-            <Button onClick={handleSaveMistralKey} disabled={loading || !mistralApiKey.trim()}>
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  Save API Key
-                </>
+            <div className="flex gap-2">
+              <Button onClick={handleSaveMistralKey} disabled={loading || !mistralApiKey.trim()} className="flex-1">
+                {loading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Saving...
+                  </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Save API Key
+                    </>
+                  )}
+              </Button>
+              {apiKeyConfigured && (
+                <Button onClick={handleTestConnection} disabled={testing} variant="outline">
+                  {testing ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-600 mr-2"></div>
+                      Testing...
+                    </>
+                  ) : (
+                    <>
+                      <TestTube className="h-4 w-4 mr-2" />
+                      Test Connection
+                    </>
+                  )}
+                </Button>
               )}
-            </Button>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border border-slate-200">
           <CardHeader>
             <CardTitle>Profile Settings</CardTitle>
             <CardDescription>Update your account information</CardDescription>
@@ -200,6 +253,63 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+        </div>
+
+        <div className="lg:col-span-1">
+          <Card className="border border-slate-200 sticky top-20">
+            <CardHeader>
+              <CardTitle>OAuth Credentials</CardTitle>
+              <CardDescription>API authentication credentials</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label>Client ID</Label>
+                <div className="flex gap-2 mt-1">
+                  <Input
+                    value={oauthClientId}
+                    readOnly
+                    className="font-mono text-xs bg-slate-50"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => copyToClipboard(oauthClientId)}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <div>
+                <Label>Client Secret</Label>
+                <div className="flex gap-2 mt-1">
+                  <Input
+                    type="password"
+                    value={oauthClientSecret}
+                    readOnly
+                    className="font-mono text-xs bg-slate-50"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => copyToClipboard(oauthClientSecret)}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => router.push("/api/oauth/credentials")}
+              >
+                Create New Credentials
+              </Button>
+              <p className="text-xs text-slate-500">
+                Use these credentials to authenticate API requests. Click to create new credentials.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </>
   );

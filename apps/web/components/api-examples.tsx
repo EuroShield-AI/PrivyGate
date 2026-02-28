@@ -24,58 +24,58 @@ export function APIExamples({ examples }: { examples: APIExample[] }) {
   };
 
   return (
-    <Card className="sticky top-20">
-      <CardHeader>
-        <CardTitle>API Usage</CardTitle>
-        <CardDescription>Example code and responses</CardDescription>
+    <Card className="sticky top-20 border border-slate-200">
+      <CardHeader className="border-b border-slate-200">
+        <CardTitle className="text-lg">API Usage</CardTitle>
+        <CardDescription className="text-xs">Example code and responses</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4">
         <Tabs defaultValue="0" className="w-full">
-          <TabsList className="grid w-full grid-cols-1">
+          <TabsList className="grid w-full grid-cols-1 gap-1 mb-4 bg-slate-100">
             {examples.map((example, idx) => (
-              <TabsTrigger key={idx} value={idx.toString()}>
+              <TabsTrigger key={idx} value={idx.toString()} className="text-xs">
                 {example.method} {example.endpoint.split("/").pop()}
               </TabsTrigger>
             ))}
           </TabsList>
           {examples.map((example, idx) => (
-            <TabsContent key={idx} value={idx.toString()} className="space-y-4">
+            <TabsContent key={idx} value={idx.toString()} className="space-y-3 mt-0">
               <div>
-                <p className="text-sm text-slate-600 mb-2">{example.description}</p>
-                <div className="relative">
-                  <pre className="bg-slate-900 text-slate-100 p-4 rounded-md text-xs overflow-x-auto">
-                    <code>{example.curl}</code>
+                <p className="text-xs text-slate-600 mb-2 leading-relaxed">{example.description}</p>
+                <div className="relative bg-slate-900 rounded border border-slate-700">
+                  <pre className="text-slate-100 p-3 text-xs overflow-x-auto whitespace-pre-wrap break-words">
+                    <code className="font-mono">{example.curl}</code>
                   </pre>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="absolute top-2 right-2"
+                    className="absolute top-1 right-1 h-6 w-6 p-0 bg-slate-800 hover:bg-slate-700"
                     onClick={() => copyToClipboard(example.curl, `curl-${idx}`)}
                   >
                     {copied === `curl-${idx}` ? (
-                      <Check className="h-4 w-4 text-green-600" />
+                      <Check className="h-3 w-3 text-green-400" />
                     ) : (
-                      <Copy className="h-4 w-4" />
+                      <Copy className="h-3 w-3" />
                     )}
                   </Button>
                 </div>
               </div>
               <div>
-                <p className="text-sm font-medium mb-2">Sample Response</p>
-                <div className="relative">
-                  <pre className="bg-slate-50 p-4 rounded-md text-xs overflow-x-auto border">
-                    <code>{JSON.stringify(example.sampleResponse, null, 2)}</code>
+                <p className="text-xs font-medium mb-2 text-slate-700">Sample Response</p>
+                <div className="relative bg-slate-50 rounded border border-slate-200">
+                  <pre className="p-3 text-xs overflow-x-auto whitespace-pre-wrap break-words">
+                    <code className="font-mono text-slate-700">{JSON.stringify(example.sampleResponse, null, 2)}</code>
                   </pre>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="absolute top-2 right-2"
+                    className="absolute top-1 right-1 h-6 w-6 p-0 bg-white hover:bg-slate-100"
                     onClick={() => copyToClipboard(JSON.stringify(example.sampleResponse, null, 2), `response-${idx}`)}
                   >
                     {copied === `response-${idx}` ? (
-                      <Check className="h-4 w-4 text-green-600" />
+                      <Check className="h-3 w-3 text-green-600" />
                     ) : (
-                      <Copy className="h-4 w-4" />
+                      <Copy className="h-3 w-3" />
                     )}
                   </Button>
                 </div>

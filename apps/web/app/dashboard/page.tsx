@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,6 +19,7 @@ interface RedactionResult {
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [inputText, setInputText] = useState("");
   const [retentionMode, setRetentionMode] = useState<"standard" | "zero">("standard");
   const [redactionResult, setRedactionResult] = useState<RedactionResult | null>(null);
@@ -26,8 +28,38 @@ export default function DashboardPage() {
   const [processResult, setProcessResult] = useState<any>(null);
   const [notification, setNotification] = useState<{ type: "success" | "error" | "info" | "warning"; message: string } | null>(null);
 
-  const showNotification = (type: "success" | "error" | "info" | "warning", message: string) => {
+  useEffect(() => {
+    // Check Mistral API key on mount
+    const checkMistralKey = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        
+        const response = await fetch("/api/settings/mistral-key", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (!data.configured) {
+            showNotification("warning", "Mistral API key not configured. Please set it in Settings to use AI features.", true);
+          }
+        }
+      } catch (error) {
+        console.error("Error checking Mistral key:", error);
+      }
+    };
+    
+    checkMistralKey();
+  }, []);
+
+  const showNotification = (type: "success" | "error" | "info" | "warning", message: string, action?: boolean) => {
     setNotification({ type, message });
+    if (action && type === "warning") {
+      // Auto-dismiss after 5 seconds for warnings with action
+      setTimeout(() => {
+        setNotification(null);
+      }, 5000);
+    }
   };
 
   const handleRedact = async () => {
@@ -77,6 +109,11 @@ export default function DashboardPage() {
       });
       if (!response.ok) {
         const error = await response.json();
+        if (error.error?.includes("Mistral API key not configured")) {
+          showNotification("warning", "Mistral API key not configured. Please set it in Settings.", true);
+          router.push("/dashboard/settings");
+          return;
+        }
         throw new Error(error.error || "Processing failed");
       }
       const data = await response.json();
@@ -140,11 +177,32 @@ export default function DashboardPage() {
       
       {notification && (
         <div className="fixed top-20 right-4 z-50 w-96">
-          <Notification
-            type={notification.type}
-            message={notification.message}
-            onClose={() => setNotification(null)}
-          />
+          <Card className={`p-4 border ${
+            notification.type === "success" ? "bg-green-50 border-green-200 text-green-800" :
+            notification.type === "error" ? "bg-red-50 border-red-200 text-red-800" :
+            notification.type === "warning" ? "bg-yellow-50 border-yellow-200 text-yellow-800" :
+            "bg-blue-50 border-blue-200 text-blue-800"
+          }`}>
+            <div className="flex items-start gap-3">
+              <p className="flex-1 text-sm font-medium">{notification.message}</p>
+              {notification.type === "warning" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => router.push("/dashboard/settings")}
+                  className="ml-2"
+                >
+                  Go to Settings
+                </Button>
+              )}
+              <button
+                onClick={() => setNotification(null)}
+                className="flex-shrink-0 hover:opacity-70 transition-opacity"
+              >
+                <span className="text-lg">×</span>
+              </button>
+            </div>
+          </Card>
         </div>
       )}
 

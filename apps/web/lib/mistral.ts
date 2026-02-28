@@ -1,13 +1,11 @@
 import { Mistral } from "@mistralai/mistralai";
 import { z } from "zod";
 
-if (!process.env.MISTRAL_API_KEY) {
-  throw new Error("MISTRAL_API_KEY is not set");
-}
-
-export const mistralClient = new Mistral({
-  apiKey: process.env.MISTRAL_API_KEY,
-});
+// Note: mistralClient is deprecated. Use user-specific API keys via getMistralApiKey()
+// This export is kept for backward compatibility but should not be used in new code
+export const mistralClient = process.env.MISTRAL_API_KEY 
+  ? new Mistral({ apiKey: process.env.MISTRAL_API_KEY })
+  : null;
 
 export async function callMistralWithSchema<T>(
   prompt: string,
