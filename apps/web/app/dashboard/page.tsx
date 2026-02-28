@@ -219,8 +219,8 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <div className="grid lg:grid-cols-3 gap-6 h-full">
-        <div className="lg:col-span-2 space-y-6 overflow-y-auto">
+      <div className="space-y-6 overflow-y-auto">
+        <div className="flex items-start justify-between">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">Text Processing</h1>
             <p className="text-slate-600 mt-2">
@@ -228,8 +228,18 @@ export default function DashboardPage() {
               All sensitive data is automatically pseudonymized before AI processing.
             </p>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setApiModalOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Code2 className="h-4 w-4" />
+            API Usage
+          </Button>
+        </div>
 
-          <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardTitle>Input Text</CardTitle>
@@ -356,15 +366,14 @@ export default function DashboardPage() {
                 )}
               </CardContent>
             </Card>
-              )}
-            </div>
+          )}
 
-            <APIUsageModal
-              open={apiModalOpen}
-              onOpenChange={setApiModalOpen}
-              examples={apiExamples}
-            />
-          </div>
-        </>
-      );
-    }
+        <APIUsageModal
+          open={apiModalOpen}
+          onOpenChange={setApiModalOpen}
+          examples={apiExamples}
+        />
+      </div>
+    </>
+  );
+}

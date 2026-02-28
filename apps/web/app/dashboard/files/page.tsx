@@ -544,15 +544,14 @@ export default function FilesPage() {
                 </Card>
               )}
             </>
-              )}
-            </div>
+          )}
 
-            <APIUsageModal
-              open={apiModalOpen}
-              onOpenChange={setApiModalOpen}
-              examples={apiExamples}
-            />
-          </div>
-        </>
-      );
-    }
+        <APIUsageModal
+          open={apiModalOpen}
+          onOpenChange={setApiModalOpen}
+          examples={apiExamples}
+        />
+      </div>
+    </>
+  );
+}
