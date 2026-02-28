@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db, jobs } from "@/lib/db";
-import {
-  summarizeText,
-  extractActions,
-  classifyText,
-} from "@/lib/mistral";
 import { AuditLogger } from "@/lib/audit";
+import { requireAuth } from "@/lib/auth";
+import { getMistralApiKey } from "@/lib/mistral-config";
+import { Mistral } from "@mistralai/mistralai";
 import { eq } from "drizzle-orm";
 
 const processSchema = z.object({
@@ -16,8 +14,24 @@ const processSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAuth(request);
+    if ("error" in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
     const body = await request.json();
     const { jobId, taskType } = processSchema.parse(body);
+
+    // Get user's Mistral API key
+    const mistralApiKey = await getMistralApiKey(auth.user.id);
+    if (!mistralApiKey) {
+      return NextResponse.json(
+        { error: "Mistral API key not configured. Please set it in Settings." },
+        { status: 400 }
+      );
+    }
+
+    const mistral = new Mistral({ apiKey: mistralApiKey });
 
     // Get job
     const jobResults = await db.select().from(jobs).where(eq(jobs.id, jobId)).limit(1);
@@ -41,19 +55,35 @@ export async function POST(request: NextRequest) {
     // Process based on task type
     let result: unknown;
     let modelUsed = "mistral-large-latest";
-
     const redactedText = job.redactedText;
 
     switch (taskType) {
-      case "summarize":
-        result = await summarizeText(redactedText);
+      case "summarize": {
+        const response = await mistral.chat.complete({
+          model: modelUsed,
+          messages: [{ role: "user", content: `Summarize the following text in 2-3 sentences:\n\n${redactedText}` }],
+        });
+        result = response.choices[0]?.message?.content || "";
         break;
-      case "classify":
-        result = await classifyText(redactedText);
+      }
+      case "classify": {
+        const response = await mistral.chat.complete({
+          model: modelUsed,
+          messages: [{ role: "user", content: `Classify the following text. Return JSON with "category" (string), "sentiment" (positive/neutral/negative), and "urgency" (low/medium/high):\n\n${redactedText}` }],
+          responseFormat: { type: "json_object" },
+        });
+        result = JSON.parse(response.choices[0]?.message?.content || "{}");
         break;
-      case "extract-actions":
-        result = await extractActions(redactedText);
+      }
+      case "extract-actions": {
+        const response = await mistral.chat.complete({
+          model: modelUsed,
+          messages: [{ role: "user", content: `Extract actionable items from the following text. Return as JSON with an "actions" array containing objects with "action" (string) and "priority" (high/medium/low) fields:\n\n${redactedText}` }],
+          responseFormat: { type: "json_object" },
+        });
+        result = JSON.parse(response.choices[0]?.message?.content || "{}");
         break;
+      }
     }
 
     // Create audit log for processing completion

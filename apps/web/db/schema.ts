@@ -8,6 +8,7 @@ export const users = mysqlTable('users', {
   email: varchar('email', { length: 255 }).unique().notNull(),
   passwordHash: varchar('passwordHash', { length: 255 }),
   role: varchar('role', { length: 50 }).default('user'),
+  mistralApiKey: text('mistralApiKey'), // Encrypted Mistral API key
   createdAt: datetime('createdAt').default('CURRENT_TIMESTAMP'),
   updatedAt: datetime('updatedAt').default('CURRENT_TIMESTAMP'),
 });

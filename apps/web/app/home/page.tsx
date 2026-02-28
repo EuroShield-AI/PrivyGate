@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Shield, Lock, FileCheck, Zap, Globe, ArrowRight, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
+import { OTPInput } from "@/components/otp-input";
+import { Notification } from "@/components/notification";
 
 export default function HomePage() {
   const router = useRouter();
@@ -17,6 +19,7 @@ export default function HomePage() {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [notification, setNotification] = useState<{ type: "success" | "error" | "info" | "warning"; message: string } | null>(null);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -28,8 +31,15 @@ export default function HomePage() {
     }
   }, [router]);
 
+  const showNotification = (type: "success" | "error" | "info" | "warning", message: string) => {
+    setNotification({ type, message });
+  };
+
   const handleSendOTP = async () => {
-    if (!email) return;
+    if (!email) {
+      showNotification("warning", "Please enter your email address");
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch("/api/auth/otp/send", {
@@ -40,19 +50,19 @@ export default function HomePage() {
       const data = await res.json();
       if (res.ok && data.success) {
         setOtpSent(true);
-        alert("OTP sent successfully! Please check your email.");
+        showNotification("success", "OTP sent successfully! Please check your email.");
       } else {
         // Email sending failed but OTP is available
         if (data.code) {
-          alert(`OTP: ${data.code} (Email sending failed, using code for testing)`);
+          showNotification("info", `OTP: ${data.code} (Email sending failed, using code for testing)`);
           setOtpSent(true);
         } else {
-          alert("Failed to send OTP. Please try again.");
+          showNotification("error", data.error || "Failed to send OTP. Please try again.");
         }
       }
     } catch (error) {
       console.error(error);
-      alert("Failed to send OTP. Please try again.");
+      showNotification("error", "Failed to send OTP. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -60,7 +70,7 @@ export default function HomePage() {
 
   const handleVerifyOTP = async () => {
     if (!otp || otp.length !== 6) {
-      alert("Please enter a 6-digit OTP code");
+      showNotification("warning", "Please enter a complete 6-digit OTP code");
       return;
     }
     setLoading(true);
@@ -74,15 +84,17 @@ export default function HomePage() {
       if (res.ok && data.token) {
         localStorage.setItem("token", data.token);
         setIsLoggedIn(true);
-        alert("Login successful! Redirecting to dashboard...");
-        router.push("/dashboard");
+        showNotification("success", "Login successful! Redirecting to dashboard...");
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 1000);
       } else {
-        alert(data.error || "Invalid OTP. Please try again.");
+        showNotification("error", data.error || "Invalid OTP. Please try again.");
         setOtp(""); // Clear OTP input
       }
     } catch (error) {
       console.error(error);
-      alert("Failed to verify OTP. Please try again.");
+      showNotification("error", "Failed to verify OTP. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -90,6 +102,16 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      {notification && (
+        <div className="fixed top-20 right-4 z-50 w-96">
+          <Notification
+            type={notification.type}
+            message={notification.message}
+            onClose={() => setNotification(null)}
+          />
+        </div>
+      )}
+
       {/* Header */}
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -150,19 +172,24 @@ export default function HomePage() {
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="otp">Enter 6-digit code</Label>
-                    <Input
-                      id="otp"
-                      type="text"
-                      placeholder="000000"
-                      maxLength={6}
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                    />
+                    <div className="mt-2">
+                      <OTPInput
+                        value={otp}
+                        onChange={setOtp}
+                        disabled={loading}
+                      />
+                    </div>
+                    <p className="text-xs text-slate-500 mt-2 text-center">
+                      Check your email for the verification code
+                    </p>
                   </div>
                   <Button onClick={handleVerifyOTP} disabled={loading || otp.length !== 6} className="w-full">
-                    Verify & Login
+                    {loading ? "Verifying..." : "Verify & Login"}
                   </Button>
-                  <Button variant="ghost" onClick={() => setOtpSent(false)} className="w-full text-sm">
+                  <Button variant="ghost" onClick={() => {
+                    setOtpSent(false);
+                    setOtp("");
+                  }} className="w-full text-sm">
                     Use different email
                   </Button>
                 </div>

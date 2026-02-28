@@ -18,6 +18,7 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [tokenUsage, setTokenUsage] = useState({ used: 0, limit: 1000000 });
   const [model, setModel] = useState("mistral-large-latest");
+  const [mistralConfigured, setMistralConfigured] = useState(false);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -37,7 +38,27 @@ export default function DashboardLayout({
 
     // Fetch token usage (mock for now)
     fetchTokenUsage();
+    
+    // Check Mistral API key status
+    checkMistralStatus();
   }, [router]);
+
+  const checkMistralStatus = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      
+      const response = await fetch("/api/settings/mistral-key", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setMistralConfigured(data.configured);
+      }
+    } catch (error) {
+      console.error("Error checking Mistral status:", error);
+    }
+  };
 
   const fetchTokenUsage = async () => {
     // TODO: Implement actual token usage API
@@ -85,7 +106,14 @@ export default function DashboardLayout({
             <div className="hidden md:flex items-center gap-4">
               <div className="text-right">
                 <p className="text-xs text-slate-500">Model</p>
-                <p className="text-sm font-medium text-slate-900">{model}</p>
+                <p className="text-sm font-medium text-slate-900 flex items-center gap-1">
+                  {model}
+                  {mistralConfigured ? (
+                    <span className="h-2 w-2 bg-green-500 rounded-full" title="Mistral API configured" />
+                  ) : (
+                    <span className="h-2 w-2 bg-yellow-500 rounded-full" title="Mistral API not configured" />
+                  )}
+                </p>
               </div>
               <div className="text-right">
                 <p className="text-xs text-slate-500">Tokens</p>

@@ -1,4 +1,5 @@
 import * as cheerio from "cheerio";
+import { Mistral } from "@mistralai/mistralai";
 
 export interface GDPRFinding {
   type: "cookie" | "form" | "tracking" | "privacy_policy" | "consent" | "data_collection";
@@ -6,6 +7,7 @@ export interface GDPRFinding {
   description: string;
   location?: string;
   recommendation?: string;
+  aiAnalysis?: string;
 }
 
 export interface GDPRReport {
@@ -16,10 +18,17 @@ export interface GDPRReport {
   hasCookieBanner: boolean;
   hasConsentMechanism: boolean;
   dataCollectionPoints: number;
+  aiSummary?: string;
+  scanningStatus?: string;
 }
 
-export async function analyzeWebsite(url: string): Promise<GDPRReport> {
+export async function analyzeWebsite(
+  url: string,
+  mistralApiKey?: string,
+  onStatusUpdate?: (status: string) => void
+): Promise<GDPRReport> {
   try {
+    onStatusUpdate?.("Fetching website content...");
     const response = await fetch(url, {
       headers: {
         "User-Agent": "Mozilla/5.0 (compatible; PrivyGate GDPR Analyzer/1.0)",
@@ -30,10 +39,14 @@ export async function analyzeWebsite(url: string): Promise<GDPRReport> {
       throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
     }
 
+    onStatusUpdate?.("Parsing HTML content...");
     const html = await response.text();
     const $ = cheerio.load(html);
     const findings: GDPRFinding[] = [];
     let score = 100;
+    
+    // Extract text content for AI analysis
+    const pageText = $("body").text().substring(0, 10000); // Limit to 10k chars
 
     // Check for privacy policy
     const privacyPolicyLinks = $('a[href*="privacy"], a[href*="Privacy"], a:contains("Privacy Policy"), a:contains("privacy policy")');
@@ -128,6 +141,76 @@ export async function analyzeWebsite(url: string): Promise<GDPRReport> {
 
     score = Math.max(0, score);
 
+    let aiSummary: string | undefined;
+    let aiAnalysis: Record<string, string> = {};
+
+    // Use Mistral AI for enhanced analysis if API key is provided
+    if (mistralApiKey && pageText) {
+      try {
+        onStatusUpdate?.("Analyzing with AI...");
+        const mistral = new Mistral({ apiKey: mistralApiKey });
+        
+        const prompt = `Analyze this website's GDPR compliance. Website URL: ${url}
+        
+Key findings so far:
+- Privacy Policy: ${hasPrivacyPolicy ? "Found" : "Missing"}
+- Cookie Banner: ${hasCookieBanner.length > 0 ? "Found" : "Missing"}
+- Data Collection Points: ${dataCollectionPoints}
+- Compliance Score: ${score}/100
+
+Website content (first 10k chars):
+${pageText.substring(0, 10000)}
+
+Provide:
+1. A brief summary (2-3 sentences) of overall GDPR compliance status
+2. Specific recommendations for each finding type
+3. Any additional GDPR concerns not detected by automated checks
+
+Format as JSON:
+{
+  "summary": "...",
+  "recommendations": {
+    "privacy_policy": "...",
+    "consent": "...",
+    "data_collection": "..."
+  },
+  "additional_concerns": "..."
+}`;
+
+        const response = await mistral.chat.complete({
+          model: "mistral-large-latest",
+          messages: [{ role: "user", content: prompt }],
+          responseFormat: { type: "json_object" },
+        });
+
+        const aiResponse = JSON.parse(response.choices[0]?.message?.content || "{}");
+        aiSummary = aiResponse.summary;
+        
+        // Enhance findings with AI recommendations
+        findings.forEach((finding) => {
+          if (aiResponse.recommendations?.[finding.type]) {
+            finding.aiAnalysis = aiResponse.recommendations[finding.type];
+          }
+        });
+
+        // Add additional concerns as new findings
+        if (aiResponse.additional_concerns) {
+          findings.push({
+            type: "data_collection",
+            severity: "medium",
+            description: aiResponse.additional_concerns,
+            recommendation: "Review and address these concerns",
+            aiAnalysis: "AI-detected concern",
+          });
+        }
+      } catch (error) {
+        console.error("Mistral AI analysis error:", error);
+        // Continue without AI analysis
+      }
+    }
+
+    onStatusUpdate?.("Analysis complete");
+
     return {
       url,
       findings,
@@ -136,6 +219,7 @@ export async function analyzeWebsite(url: string): Promise<GDPRReport> {
       hasCookieBanner: hasCookieBanner.length > 0,
       hasConsentMechanism: hasCookieBanner.length > 0,
       dataCollectionPoints,
+      aiSummary,
     };
   } catch (error) {
     throw new Error(`Failed to analyze website: ${error}`);

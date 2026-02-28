@@ -13,7 +13,8 @@ export default function AnalyticsPage() {
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Analytics</h1>
           <p className="text-slate-600 mt-2">
-            View usage statistics and performance metrics
+            Monitor your usage statistics, token consumption, and processing performance. 
+            Track jobs, user activity, and system health metrics in real-time.
           </p>
         </div>
 
