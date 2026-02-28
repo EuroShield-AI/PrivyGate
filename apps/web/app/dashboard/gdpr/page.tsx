@@ -147,8 +147,8 @@ export default function GDPRAnalyzerPage() {
         </div>
       )}
 
-      <div className="grid lg:grid-cols-3 gap-6 h-full">
-        <div className="lg:col-span-2 space-y-6 overflow-y-auto">
+      <div className="space-y-6 overflow-y-auto">
+        <div className="flex items-start justify-between">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">GDPR Website Analyzer</h1>
             <p className="text-slate-600 mt-2">
@@ -156,8 +156,18 @@ export default function GDPRAnalyzerPage() {
               Uses AI-powered analysis to detect privacy policy gaps, consent mechanisms, and data collection practices.
             </p>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setApiModalOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Code2 className="h-4 w-4" />
+            API Usage
+          </Button>
+        </div>
 
-          <Card>
+        <Card>
             <CardHeader>
               <CardTitle>Website Analysis</CardTitle>
               <CardDescription>
