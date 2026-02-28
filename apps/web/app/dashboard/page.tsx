@@ -11,7 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { Notification } from "@/components/notification";
 import { APIExamples } from "@/components/api-examples";
-import { Card } from "@/components/ui/card";
 
 interface RedactionResult {
   jobId: string;
