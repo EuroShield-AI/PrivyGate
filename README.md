@@ -12,7 +12,7 @@
 
 *Safely adopt LLM workflows without exposing personal data or violating GDPR principles*
 
-[Features](#-core-capabilities) • [Quick Start](#-local-development) • [Documentation](#-documentation) • [API Docs](#-api-documentation)
+[Features](#-core-capabilities) • [Documentation](#-documentation) • [API Docs](#-api-documentation)
 
 </div>
 
