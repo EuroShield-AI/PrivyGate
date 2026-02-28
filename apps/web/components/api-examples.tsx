@@ -24,12 +24,12 @@ export function APIExamples({ examples }: { examples: APIExample[] }) {
   };
 
   return (
-    <Card className="sticky top-20 border border-slate-200">
-      <CardHeader className="border-b border-slate-200">
+    <Card className="h-full border border-slate-200 flex flex-col">
+      <CardHeader className="border-b border-slate-200 flex-shrink-0">
         <CardTitle className="text-lg">API Usage</CardTitle>
         <CardDescription className="text-xs">Example code and responses</CardDescription>
       </CardHeader>
-      <CardContent className="p-4">
+      <CardContent className="p-4 flex-1 overflow-y-auto">
         <Tabs defaultValue="0" className="w-full">
           <TabsList className="grid w-full grid-cols-1 gap-1 mb-4 bg-slate-100">
             {examples.map((example, idx) => (

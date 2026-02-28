@@ -123,9 +123,9 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="h-screen flex flex-col bg-slate-50 overflow-hidden">
       {/* Topbar */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+      <header className="bg-white border-b border-slate-200 z-50 shadow-sm flex-shrink-0">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-4">
             <Button
@@ -184,14 +184,14 @@ export default function DashboardLayout({
         </div>
       </header>
 
-      <div className="flex">
+      <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <aside
-          className={`bg-white border-r border-slate-200 transition-all duration-300 ${
+          className={`bg-white border-r border-slate-200 transition-all duration-300 flex-shrink-0 ${
             sidebarOpen ? "w-64" : "w-0"
-          } overflow-hidden ${sidebarOpen ? "" : "hidden"} lg:block`}
+          } overflow-hidden ${sidebarOpen ? "" : "hidden"} lg:block h-full`}
         >
-          <nav className="p-4 space-y-1">
+          <nav className="p-4 space-y-1 h-full overflow-y-auto">
             <Link
               href="/dashboard"
               className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
@@ -251,7 +251,7 @@ export default function DashboardLayout({
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 min-w-0">
+        <main className="flex-1 min-w-0 overflow-y-auto">
           <div className="p-6">
             {children}
           </div>

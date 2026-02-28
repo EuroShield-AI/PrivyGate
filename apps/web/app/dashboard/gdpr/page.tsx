@@ -136,8 +136,8 @@ export default function GDPRAnalyzerPage() {
         </div>
       )}
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid lg:grid-cols-3 gap-6 h-full">
+        <div className="lg:col-span-2 space-y-6 overflow-y-auto">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">GDPR Website Analyzer</h1>
             <p className="text-slate-600 mt-2">
@@ -307,7 +307,7 @@ export default function GDPRAnalyzerPage() {
           </Card>
         </div>
 
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 h-full">
           <APIExamples examples={apiExamples} />
         </div>
       </div>

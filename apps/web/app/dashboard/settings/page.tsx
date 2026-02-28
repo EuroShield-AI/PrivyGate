@@ -192,8 +192,8 @@ export default function SettingsPage() {
         </div>
       )}
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid lg:grid-cols-3 gap-6 h-full">
+        <div className="lg:col-span-2 space-y-6 overflow-y-auto">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">Settings</h1>
             <p className="text-slate-600 mt-2">
@@ -324,8 +324,8 @@ export default function SettingsPage() {
         </Card>
         </div>
 
-        <div className="lg:col-span-1">
-          <Card className="border border-slate-200 sticky top-20">
+        <div className="lg:col-span-1 h-full">
+          <Card className="border border-slate-200 h-full flex flex-col">
             <CardHeader>
               <CardTitle>OAuth Credentials</CardTitle>
               <CardDescription>API authentication credentials</CardDescription>
