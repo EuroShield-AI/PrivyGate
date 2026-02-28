@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { Shield, LogOut, Menu, X, FileText, Globe, Settings, BarChart3, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -124,38 +125,58 @@ export default function DashboardLayout({
           <nav className="p-4 space-y-1">
             <Link
               href="/dashboard"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors"
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                pathname === "/dashboard"
+                  ? "bg-blue-50 text-blue-700 font-medium"
+                  : "text-slate-700 hover:bg-slate-100"
+              }`}
             >
               <Zap className="h-5 w-5" />
-              <span className="font-medium">Text Processing</span>
+              <span>Text Processing</span>
             </Link>
             <Link
               href="/dashboard/files"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors"
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                pathname === "/dashboard/files"
+                  ? "bg-blue-50 text-blue-700 font-medium"
+                  : "text-slate-700 hover:bg-slate-100"
+              }`}
             >
               <FileText className="h-5 w-5" />
-              <span className="font-medium">File Upload</span>
+              <span>File Upload</span>
             </Link>
             <Link
               href="/dashboard/gdpr"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors"
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                pathname === "/dashboard/gdpr"
+                  ? "bg-blue-50 text-blue-700 font-medium"
+                  : "text-slate-700 hover:bg-slate-100"
+              }`}
             >
               <Globe className="h-5 w-5" />
-              <span className="font-medium">GDPR Analyzer</span>
+              <span>GDPR Analyzer</span>
             </Link>
             <Link
               href="/dashboard/analytics"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors"
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                pathname === "/dashboard/analytics"
+                  ? "bg-blue-50 text-blue-700 font-medium"
+                  : "text-slate-700 hover:bg-slate-100"
+              }`}
             >
               <BarChart3 className="h-5 w-5" />
-              <span className="font-medium">Analytics</span>
+              <span>Analytics</span>
             </Link>
             <Link
               href="/dashboard/settings"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors"
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                pathname === "/dashboard/settings"
+                  ? "bg-blue-50 text-blue-700 font-medium"
+                  : "text-slate-700 hover:bg-slate-100"
+              }`}
             >
               <Settings className="h-5 w-5" />
-              <span className="font-medium">Settings</span>
+              <span>Settings</span>
             </Link>
           </nav>
         </aside>
