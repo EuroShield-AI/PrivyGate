@@ -8,8 +8,6 @@ export const users = mysqlTable('users', {
   email: varchar('email', { length: 255 }).unique().notNull(),
   passwordHash: varchar('passwordHash', { length: 255 }),
   role: varchar('role', { length: 50 }).default('user'),
-  emailVerified: datetime('emailVerified'),
-  image: varchar('image', { length: 500 }),
   createdAt: datetime('createdAt').default('CURRENT_TIMESTAMP'),
 });
 

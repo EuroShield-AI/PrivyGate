@@ -37,18 +37,32 @@ export default function HomePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
-      if (res.ok) {
+      const data = await res.json();
+      if (res.ok && data.success) {
         setOtpSent(true);
+        alert("OTP sent successfully! Please check your email.");
+      } else {
+        // Email sending failed but OTP is available
+        if (data.code) {
+          alert(`OTP: ${data.code} (Email sending failed, using code for testing)`);
+          setOtpSent(true);
+        } else {
+          alert("Failed to send OTP. Please try again.");
+        }
       }
     } catch (error) {
       console.error(error);
+      alert("Failed to send OTP. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleVerifyOTP = async () => {
-    if (!otp || otp.length !== 6) return;
+    if (!otp || otp.length !== 6) {
+      alert("Please enter a 6-digit OTP code");
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch("/api/auth/otp/verify", {
@@ -56,14 +70,19 @@ export default function HomePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, code: otp }),
       });
-      if (res.ok) {
-        const data = await res.json();
+      const data = await res.json();
+      if (res.ok && data.token) {
         localStorage.setItem("token", data.token);
         setIsLoggedIn(true);
+        alert("Login successful! Redirecting to dashboard...");
         router.push("/dashboard");
+      } else {
+        alert(data.error || "Invalid OTP. Please try again.");
+        setOtp(""); // Clear OTP input
       }
     } catch (error) {
       console.error(error);
+      alert("Failed to verify OTP. Please try again.");
     } finally {
       setLoading(false);
     }

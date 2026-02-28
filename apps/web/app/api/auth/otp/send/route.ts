@@ -62,18 +62,23 @@ export async function POST(request: NextRequest) {
 
     const code = await createOTP(email);
     
-    // In development, log the code. In production, send email
-    if (process.env.NODE_ENV === "development") {
-      console.log(`OTP for ${email}: ${code}`);
-    } else {
+    // Always try to send email (works with localhost postfix)
+    try {
       await sendOTPEmail(email, code);
+      return NextResponse.json({ 
+        message: "OTP sent successfully to your email",
+        success: true,
+      });
+    } catch (error) {
+      console.error("Email send error:", error);
+      // Fallback: return code in response for development/testing
+      return NextResponse.json({ 
+        message: "OTP generated (email sending failed, check postfix configuration)",
+        code: code, // Include code for testing
+        success: false,
+        error: "Email sending failed, but OTP is available for testing",
+      });
     }
-
-    return NextResponse.json({ 
-      message: "OTP sent successfully",
-      // Only include code in development
-      ...(process.env.NODE_ENV === "development" && { code }),
-    });
   } catch (error) {
     console.error("OTP send error:", error);
     return NextResponse.json(
