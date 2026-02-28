@@ -35,6 +35,7 @@ export default function GDPRAnalyzerPage() {
   const [analyzing, setAnalyzing] = useState(false);
   const [scanningStatus, setScanningStatus] = useState("");
   const [notification, setNotification] = useState<{ type: "success" | "error" | "info" | "warning"; message: string } | null>(null);
+  const [apiModalOpen, setApiModalOpen] = useState(false);
 
   const showNotification = (type: "success" | "error" | "info" | "warning", message: string) => {
     setNotification({ type, message });
