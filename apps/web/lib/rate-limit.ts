@@ -1,21 +1,35 @@
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
+// Dynamic imports for edge runtime compatibility
+let Ratelimit: any;
+let Redis: any;
 
 // For development, use in-memory rate limiting if Redis is not configured
-let ratelimit: Ratelimit | null = null;
+let ratelimit: any = null;
 
-if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
-  const redis = new Redis({
-    url: process.env.UPSTASH_REDIS_REST_URL,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN,
-  });
+// Initialize rate limiter
+async function initializeRateLimit() {
+  if (ratelimit) return ratelimit;
 
-  ratelimit = new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(100, "1 h"), // 100 requests per hour
-    analytics: true,
-  });
-} else {
+  if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+    try {
+      const { Ratelimit: RL } = await import("@upstash/ratelimit");
+      const { Redis: R } = await import("@upstash/redis");
+      
+      const redis = new R({
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      });
+
+      ratelimit = new RL({
+        redis,
+        limiter: RL.slidingWindow(100, "1 h"), // 100 requests per hour
+        analytics: true,
+      });
+      return ratelimit;
+    } catch (error) {
+      console.warn("Failed to initialize Upstash rate limiting, using in-memory fallback:", error);
+    }
+  }
+
   // In-memory fallback for development
   const memory = new Map<string, { count: number; reset: number }>();
   
@@ -38,7 +52,9 @@ if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) 
       record.count++;
       return { success: true, limit: 100, remaining: 100 - record.count, reset: record.reset };
     },
-  } as Ratelimit;
+  };
+  
+  return ratelimit;
 }
 
 export async function checkRateLimit(identifier: string): Promise<{
@@ -47,8 +63,6 @@ export async function checkRateLimit(identifier: string): Promise<{
   remaining: number;
   reset: number;
 }> {
-  if (!ratelimit) {
-    return { success: true, limit: 100, remaining: 99, reset: Date.now() + 3600000 };
-  }
-  return ratelimit.limit(identifier);
+  const limiter = await initializeRateLimit();
+  return limiter.limit(identifier);
 }
