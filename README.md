@@ -8,12 +8,26 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
 [![Open Source](https://img.shields.io/badge/Open%20Source-Yes-green)](./DEPENDENCIES.md)
+[![Mistral Hackathon](https://img.shields.io/badge/Mistral%20Hackathon-2026-blue)](https://worldwide-hackathon.mistral.ai/)
 
 *Safely adopt LLM workflows without exposing personal data or violating GDPR principles*
 
 [Features](#-core-capabilities) • [Quick Start](#-local-development) • [Documentation](#-documentation) • [API Docs](#-api-documentation)
 
 </div>
+
+---
+
+## 🏆 Built for Mistral Worldwide Hackathon
+
+This application was built as part of the **[Mistral Worldwide Hackathon](https://worldwide-hackathon.mistral.ai/)** (February 28th - March 1st, 2026), demonstrating privacy-by-design AI infrastructure for European organizations.
+
+**Development Approach:**
+- Built using **vibe coding** methodology
+- Developed with **Mistral Vibe** for AI-assisted development
+- Showcases Mistral AI's capabilities in privacy-preserving applications
+
+The hackathon brought together 1000+ hackers across 7 locations (Paris, London, NYC, SF, Tokyo, Singapore, Sydney, and Online) to build innovative applications using Mistral AI.
 
 ---
 
