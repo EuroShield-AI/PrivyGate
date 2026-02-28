@@ -48,6 +48,7 @@ export default function FilesPage() {
   const [processResult, setProcessResult] = useState<any>(null);
   const [showExtractedText, setShowExtractedText] = useState(false);
   const [notification, setNotification] = useState<{ type: "success" | "error" | "info" | "warning"; message: string } | null>(null);
+  const [apiModalOpen, setApiModalOpen] = useState(false);
 
   const showNotification = (type: "success" | "error" | "info" | "warning", message: string) => {
     setNotification({ type, message });
@@ -261,8 +262,8 @@ export default function FilesPage() {
         </div>
       )}
 
-      <div className="grid lg:grid-cols-3 gap-6 h-full">
-        <div className="lg:col-span-2 space-y-6 overflow-y-auto">
+      <div className="space-y-6 overflow-y-auto">
+        <div className="flex items-start justify-between">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">File Upload</h1>
             <p className="text-slate-600 mt-2">
@@ -270,6 +271,16 @@ export default function FilesPage() {
               Large files are automatically chunked and stored in vector database for efficient AI processing.
             </p>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setApiModalOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Code2 className="h-4 w-4" />
+            API Usage
+          </Button>
+        </div>
 
           {!fileResult ? (
             <Card className="border border-slate-200">
