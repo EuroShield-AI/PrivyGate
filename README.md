@@ -27,8 +27,6 @@ This application was built as part of the **[Mistral Worldwide Hackathon](https:
 - Developed with **Mistral Vibe** for AI-assisted development
 - Showcases Mistral AI's capabilities in privacy-preserving applications
 
-The hackathon brought together 1000+ hackers across 7 locations (Paris, London, NYC, SF, Tokyo, Singapore, Sydney, and Online) to build innovative applications using Mistral AI.
-
 ---
 
 ## 🎯 Why PrivyGate?
