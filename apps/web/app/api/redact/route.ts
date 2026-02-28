@@ -4,6 +4,7 @@ import { db, jobs, detectedEntities } from "@/lib/db";
 import { PIIDetector, PseudonymizationVault } from "@/lib/privacy-engine";
 import { encrypt } from "@/lib/encryption";
 import { AuditLogger } from "@/lib/audit";
+import { requireAuth } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 
@@ -14,6 +15,12 @@ const redactSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    // Check authentication
+    const auth = await requireAuth(request);
+    if ("error" in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
     const body = await request.json();
     const { text, retentionMode } = redactSchema.parse(body);
 
