@@ -156,25 +156,32 @@ prisma/
 docs/
 ```
 
-
 ## Environment Variables
 
-Create a .env file:
+Create a `.env` file:
 
+```bash
 DATABASE_URL=
 MISTRAL_API_KEY=
 ENCRYPTION_SECRET=
+```
 
 ## Local Development
 
 Install dependencies:
+```bash
 npm install
+```
 
 Run development server:
+```bash
 npm run dev
+```
 
 Run Prisma migrations:
+```bash
 npx prisma migrate dev
+```
 
 ## Roadmap
 
