@@ -276,7 +276,6 @@ export default function SettingsPage() {
                     </>
                   ) : (
                     <>
-                      <TestTube className="h-4 w-4 mr-2" />
                       Test Connection
                     </>
                   )}

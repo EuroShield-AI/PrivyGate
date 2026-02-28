@@ -38,14 +38,14 @@ export async function GET(request: NextRequest) {
 
     if (jobIds.length > 0) {
       // Get all audit logs with token usage for user's jobs
+      // Use IN clause with proper SQL syntax for MySQL
+      const placeholders = jobIds.map(() => '?').join(',');
       const auditLogsWithTokens = await db
         .select()
         .from(auditLogs)
         .where(
-          and(
-            sql`${auditLogs.jobId} IN (${sql.join(jobIds.map(id => sql`${id}`), sql`, `)})`,
-            sql`JSON_EXTRACT(${auditLogs.metadata}, '$.totalTokens') IS NOT NULL`
-          )
+          sql`${auditLogs.jobId} IN (${sql.raw(placeholders)}) AND JSON_EXTRACT(${auditLogs.metadata}, '$.totalTokens') IS NOT NULL`,
+          ...jobIds
         );
 
       // Sum up tokens from audit logs
@@ -53,11 +53,13 @@ export async function GET(request: NextRequest) {
         try {
           const metadata = JSON.parse(log.metadata as string);
           const tokens = metadata.totalTokens || 0;
-          totalTokens += tokens;
-          
-          // Check if within last 30 days
-          if (new Date(log.timestamp) >= thirtyDaysAgo) {
-            recentTokens += tokens;
+          if (typeof tokens === 'number' && tokens > 0) {
+            totalTokens += tokens;
+            
+            // Check if within last 30 days
+            if (new Date(log.timestamp) >= thirtyDaysAgo) {
+              recentTokens += tokens;
+            }
           }
         } catch (e) {
           // Skip invalid JSON
