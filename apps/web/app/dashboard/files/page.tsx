@@ -215,7 +215,7 @@ export default function FilesPage() {
     {
       endpoint: "/api/upload",
       method: "POST",
-      description: "Upload PDF or DOCX file for text extraction",
+      description: "Process PDF or DOCX file for text extraction and PII detection",
       curl: `curl -X POST ${apiBaseUrl || "https://api.privygate.com"}/api/upload \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -F "file=@document.pdf"`,
