@@ -13,23 +13,14 @@ export async function verifyToken(token: string): Promise<any | null> {
   try {
     const secret = process.env.NEXTAUTH_SECRET;
     if (!secret) {
-      throw new Error("NEXTAUTH_SECRET not configured");
-    }
-
-    // Simple JWT verification (decode and check expiry)
-    const parts = token.split(".");
-    if (parts.length !== 3) {
+      console.error("NEXTAUTH_SECRET not configured");
       return null;
     }
 
-    const payload = JSON.parse(Buffer.from(parts[1], "base64").toString());
-    
-    // Check expiry
-    if (payload.exp && payload.exp * 1000 < Date.now()) {
-      return null;
-    }
-
-    return payload;
+    // Use jsonwebtoken to verify the token
+    const jwt = await import("jsonwebtoken");
+    const decoded = jwt.verify(token, secret);
+    return decoded as any;
   } catch (error) {
     console.error("Token verification error:", error);
     return null;

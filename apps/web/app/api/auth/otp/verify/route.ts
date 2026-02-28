@@ -73,13 +73,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate JWT token
+    const secret = process.env.NEXTAUTH_SECRET;
+    if (!secret) {
+      console.error("NEXTAUTH_SECRET is not configured");
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 }
+      );
+    }
+
     const token = jwt.sign(
       {
         id: user.id,
         email: user.email,
         role: user.role || "user",
       },
-      process.env.NEXTAUTH_SECRET!,
+      secret,
       {
         expiresIn: "30d",
       }
