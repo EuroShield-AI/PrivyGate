@@ -143,6 +143,7 @@ This project does not replace legal advice but supports operational compliance w
 
 ## Project Structure
 
+```bash
 apps/
   web/
 
@@ -153,6 +154,7 @@ packages/
 
 prisma/
 docs/
+```
 
 
 ## Environment Variables
